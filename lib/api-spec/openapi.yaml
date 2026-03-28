@@ -1,22 +1,31 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: ERP Venezuela API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: products
+    description: Product/Inventory management
+  - name: sales
+    description: Sales operations
+  - name: bcv
+    description: BCV exchange rate
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +33,290 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (DEVELOPER only)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new user (DEVELOPER only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user (DEVELOPER only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all products
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product (DUEÑO only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product (DUEÑO only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product (DUEÑO only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /sales:
+    get:
+      operationId: listSales
+      tags: [sales]
+      summary: List all sales
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+          description: Start date (ISO)
+        - in: query
+          name: to
+          schema:
+            type: string
+          description: End date (ISO)
+      responses:
+        "200":
+          description: List of sales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+    post:
+      operationId: createSale
+      tags: [sales]
+      summary: Register a sale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSaleRequest"
+      responses:
+        "201":
+          description: Sale created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /sales/summary:
+    get:
+      operationId: getSalesSummary
+      tags: [sales]
+      summary: Get sales summary and top products (DUEÑO only)
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+        - in: query
+          name: to
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sales summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesSummary"
+
+  /bcv/rate:
+    get:
+      operationId: getBcvRate
+      tags: [bcv]
+      summary: Get current BCV USD/VES exchange rate
+      responses:
+        "200":
+          description: Current exchange rate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BcvRate"
+    post:
+      operationId: setBcvRate
+      tags: [bcv]
+      summary: Manually set BCV rate (DEVELOPER only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetBcvRateRequest"
+      responses:
+        "200":
+          description: Rate updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BcvRate"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +324,246 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+      required: [user, token]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [DEVELOPER, DUENO, CAJERA]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, username, name, role, isActive, createdAt]
+
+    CreateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [DEVELOPER, DUENO, CAJERA]
+      required: [username, name, password, role]
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        isActive:
+          type: boolean
+        password:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        costUsd:
+          type: number
+        priceUsd:
+          type: number
+        stock:
+          type: integer
+        minStock:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, name, category, costUsd, priceUsd, stock, minStock, createdAt]
+
+    CreateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        costUsd:
+          type: number
+        priceUsd:
+          type: number
+        stock:
+          type: integer
+        minStock:
+          type: integer
+      required: [name, category, costUsd, priceUsd, stock, minStock]
+
+    Sale:
+      type: object
+      properties:
+        id:
+          type: integer
+        cashierId:
+          type: integer
+        cashierName:
+          type: string
+        totalUsd:
+          type: number
+        totalBs:
+          type: number
+        bcvRate:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [EFECTIVO_USD, PAGO_MOVIL, PUNTO_VENTA]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItem"
+        createdAt:
+          type: string
+      required: [id, cashierId, cashierName, totalUsd, totalBs, bcvRate, paymentMethod, items, createdAt]
+
+    SaleItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        priceUsd:
+          type: number
+        costUsd:
+          type: number
+      required: [productId, productName, quantity, priceUsd, costUsd]
+
+    CreateSaleRequest:
+      type: object
+      properties:
+        paymentMethod:
+          type: string
+          enum: [EFECTIVO_USD, PAGO_MOVIL, PUNTO_VENTA]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateSaleItemRequest"
+      required: [paymentMethod, items]
+
+    CreateSaleItemRequest:
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+      required: [productId, quantity]
+
+    SalesSummary:
+      type: object
+      properties:
+        totalSalesUsd:
+          type: number
+        totalSalesBs:
+          type: number
+        totalCostUsd:
+          type: number
+        netProfitUsd:
+          type: number
+        salesCount:
+          type: integer
+        topProducts:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopProduct"
+        dailySales:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailySale"
+      required: [totalSalesUsd, totalSalesBs, totalCostUsd, netProfitUsd, salesCount, topProducts, dailySales]
+
+    TopProduct:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        totalQuantity:
+          type: integer
+        totalRevenue:
+          type: number
+      required: [productId, productName, totalQuantity, totalRevenue]
+
+    DailySale:
+      type: object
+      properties:
+        date:
+          type: string
+        totalUsd:
+          type: number
+        totalBs:
+          type: number
+      required: [date, totalUsd, totalBs]
+
+    BcvRate:
+      type: object
+      properties:
+        rate:
+          type: number
+        source:
+          type: string
+          enum: [SCRAPER, MANUAL]
+        updatedAt:
+          type: string
+      required: [rate, source, updatedAt]
+
+    SetBcvRateRequest:
+      type: object
+      properties:
+        rate:
+          type: number
+      required: [rate]
