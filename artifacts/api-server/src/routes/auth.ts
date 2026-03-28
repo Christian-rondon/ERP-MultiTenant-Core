@@ -47,6 +47,7 @@ router.post("/login", async (req, res) => {
       name: user.name,
       role: user.role,
       isActive: user.isActive,
+      comercioId: user.comercioId ?? null,
       createdAt: user.createdAt.toISOString(),
     },
     token,
@@ -77,6 +78,7 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res) => {
     name: dbUser.name,
     role: dbUser.role,
     isActive: dbUser.isActive,
+    comercioId: dbUser.comercioId ?? null,
     createdAt: dbUser.createdAt.toISOString(),
   });
 });

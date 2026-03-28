@@ -10,15 +10,19 @@ import {
   Settings, 
   LogOut,
   Menu,
-  Activity
+  Activity,
+  Building2,
+  TrendingUp
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBcvRate } from "@/hooks/use-bcv";
-import { cn, formatCurrencyBs } from "@/lib/utils";
+import { useSalesSummary } from "@/hooks/use-sales";
+import { cn, formatCurrencyUsd } from "@/lib/utils";
 import { Button } from "./ui/button";
 
 const sidebarLinks = {
   DEVELOPER: [
+    { href: "/comercios", label: "Comercios", icon: Building2 },
     { href: "/users", label: "Usuarios", icon: Users },
     { href: "/settings", label: "Tasa BCV", icon: Settings },
   ],
@@ -33,6 +37,20 @@ const sidebarLinks = {
     { href: "/inventory", label: "Consulta de Stock", icon: Package },
   ]
 };
+
+function DailyTicker() {
+  const today = new Date().toISOString().split("T")[0];
+  const { data: summary } = useSalesSummary(today, today);
+  if (!summary) return null;
+  return (
+    <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
+      <TrendingUp className="w-3.5 h-3.5" />
+      <span>Hoy: {formatCurrencyUsd(summary.totalSalesUsd)}</span>
+      <span className="w-px h-3 bg-primary/30" />
+      <span>{summary.salesCount} venta{summary.salesCount !== 1 ? "s" : ""}</span>
+    </div>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -119,14 +137,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </h1>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {user.role === "DUENO" && <DailyTicker />}
             <div className="px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center gap-2 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
               </span>
               <span className="font-semibold tracking-wide text-sm">
-                TASA BCV: {bcvRate ? formatCurrencyBs(bcvRate.rate).replace('VES', 'Bs') : '...'}
+                BCV: {bcvRate ? `${Number(bcvRate.rate).toFixed(2)} Bs` : '...'}
               </span>
             </div>
           </div>

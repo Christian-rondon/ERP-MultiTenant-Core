@@ -5,15 +5,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyUsd, formatCurrencyBs } from "@/lib/utils";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  BarChart, Bar
 } from "recharts";
 import { DollarSign, AlertTriangle, TrendingUp, ShoppingBag } from "lucide-react";
 
+function getLast15Days(): string[] {
+  const days: string[] = [];
+  for (let i = 14; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split("T")[0]);
+  }
+  return days;
+}
+
+function fill15DayGaps(
+  raw: { date: string; totalUsd: number; totalBs: number }[]
+): { date: string; totalUsd: number; totalBs: number }[] {
+  const map: Record<string, { totalUsd: number; totalBs: number }> = {};
+  for (const d of raw) map[d.date] = { totalUsd: d.totalUsd, totalBs: d.totalBs };
+  return getLast15Days().map(date => ({
+    date: date.slice(5),
+    totalUsd: map[date]?.totalUsd || 0,
+    totalBs: map[date]?.totalBs || 0,
+  }));
+}
+
 export default function Dashboard() {
-  const { data: summary, isLoading: isLoadingSummary } = useSalesSummary();
+  const from15 = getLast15Days()[0];
+  const { data: summary, isLoading: isLoadingSummary } = useSalesSummary(from15);
   const { data: products } = useProducts();
 
   const criticalStock = products?.filter(p => p.stock <= p.minStock) || [];
+  const chartData = summary ? fill15DayGaps(summary.dailySales) : [];
 
   if (isLoadingSummary || !summary) {
     return <div className="text-center p-12 text-muted-foreground">Cargando dashboard...</div>;
@@ -38,7 +61,7 @@ export default function Dashboard() {
         <Card className="bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Ventas Totales (USD)</p>
+              <p className="text-sm font-medium text-muted-foreground">Ventas (15 días USD)</p>
               <div className="p-2 bg-primary/10 rounded-lg text-primary"><DollarSign className="w-5 h-5" /></div>
             </div>
             <h3 className="text-3xl font-bold font-display">{formatCurrencyUsd(summary.totalSalesUsd)}</h3>
@@ -48,7 +71,7 @@ export default function Dashboard() {
         <Card className="bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Ventas Totales (Bs)</p>
+              <p className="text-sm font-medium text-muted-foreground">Ventas (15 días Bs)</p>
               <div className="p-2 bg-accent/10 rounded-lg text-accent"><DollarSign className="w-5 h-5" /></div>
             </div>
             <h3 className="text-3xl font-bold font-display">{formatCurrencyBs(summary.totalSalesBs).replace('VES', 'Bs')}</h3>
@@ -58,7 +81,7 @@ export default function Dashboard() {
         <Card className="bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Utilidad Neta</p>
+              <p className="text-sm font-medium text-muted-foreground">Utilidad Neta (15d)</p>
               <div className="p-2 bg-success/10 rounded-lg text-success"><TrendingUp className="w-5 h-5" /></div>
             </div>
             <h3 className="text-3xl font-bold font-display text-success">{formatCurrencyUsd(summary.netProfitUsd)}</h3>
@@ -68,7 +91,7 @@ export default function Dashboard() {
         <Card className="bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Cant. Ventas</p>
+              <p className="text-sm font-medium text-muted-foreground">Cant. Ventas (15d)</p>
               <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><ShoppingBag className="w-5 h-5" /></div>
             </div>
             <h3 className="text-3xl font-bold font-display">{summary.salesCount}</h3>
@@ -77,15 +100,15 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Sales Chart */}
+        {/* 15-Day Sales Chart */}
         <Card className="col-span-1 lg:col-span-2">
           <CardHeader>
-            <CardTitle>Ventas Diarias (USD)</CardTitle>
+            <CardTitle>Ventas Últimos 15 Días (USD)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={summary.dailySales} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorUsd" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -93,8 +116,8 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
                   <RechartsTooltip 
                     contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }}
                     itemStyle={{ color: 'hsl(var(--primary))' }}

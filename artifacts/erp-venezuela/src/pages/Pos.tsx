@@ -22,7 +22,7 @@ export default function Pos() {
 
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<"EFECTIVO_USD" | "PAGO_MOVIL" | "PUNTO_VENTA">("PAGO_MOVIL");
+  const [paymentMethod, setPaymentMethod] = useState<"EFECTIVO_USD" | "PAGO_MOVIL" | "PUNTO_VENTA" | "EFECTIVO_BS">("PAGO_MOVIL");
 
   const filteredProducts = products?.filter(p => 
     (p.name.toLowerCase().includes(search.toLowerCase()) || 

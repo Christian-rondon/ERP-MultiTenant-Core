@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16"]
 
 [[artifacts]]
 id = "artifacts/api-server"
@@ -29,3 +29,6 @@ timeoutMs = 20000
 
 [userenv.shared]
 TRIAL_END_DATE = "(Año-Mes-Día)"
+
+[nix]
+channel = "stable-25_05"

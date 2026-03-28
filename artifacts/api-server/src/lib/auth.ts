@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { Request, Response, NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
+import { usersTable, comerciosTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "erp-venezuela-secret-key";
@@ -24,7 +24,7 @@ export async function comparePassword(password: string, hash: string): Promise<b
 }
 
 export interface AuthRequest extends Request {
-  user?: { id: number; role: string; name: string; username: string };
+  user?: { id: number; role: string; name: string; username: string; comercioId?: number | null };
 }
 
 export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
@@ -48,11 +48,28 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
       return;
     }
 
+    const user = users[0];
+
+    // Cascade block: if user is linked to a comercio, verify it's still active
+    if (user.comercioId) {
+      const comercios = await db
+        .select()
+        .from(comerciosTable)
+        .where(eq(comerciosTable.id, user.comercioId))
+        .limit(1);
+
+      if (!comercios.length || !comercios[0].isActive) {
+        res.status(401).json({ error: "COMERCIO_SUSPENDIDO: Acceso bloqueado. Contacte al administrador." });
+        return;
+      }
+    }
+
     req.user = {
-      id: users[0].id,
-      role: users[0].role,
-      name: users[0].name,
-      username: users[0].username,
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      username: user.username,
+      comercioId: user.comercioId,
     };
     next();
   } catch {

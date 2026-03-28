@@ -6,6 +6,16 @@ export interface User {
   name: string;
   role: UserRole;
   isActive: boolean;
+  comercioId?: number | null;
+  createdAt: string;
+}
+
+export interface Comercio {
+  id: number;
+  name: string;
+  ownerName: string;
+  uniqueCode: string;
+  isActive: boolean;
   createdAt: string;
 }
 
@@ -20,7 +30,7 @@ export interface Product {
   createdAt: string;
 }
 
-export type PaymentMethod = "EFECTIVO_USD" | "PAGO_MOVIL" | "PUNTO_VENTA";
+export type PaymentMethod = "EFECTIVO_USD" | "PAGO_MOVIL" | "PUNTO_VENTA" | "EFECTIVO_BS";
 
 export interface SaleItem {
   productId: number;
