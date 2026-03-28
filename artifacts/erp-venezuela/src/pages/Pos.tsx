@@ -5,7 +5,7 @@ import { useBcvRate } from "@/hooks/use-bcv";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatCurrencyUsd, formatCurrencyBs } from "@/lib/utils";
+import { cn, formatCurrencyUsd, formatCurrencyBs } from "@/lib/utils";
 import { Search, Plus, Minus, Trash2, ShoppingCart, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/lib/types";
