@@ -117,41 +117,68 @@ export default function Users() {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-full overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{editingUser ? "Editar Usuario" : "Nuevo Usuario"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
-              <Input required disabled={!!editingUser} value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nombre Completo</label>
-              <Input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-            </div>
-            {!editingUser && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Rol</label>
-                <select 
-                  className="flex h-11 w-full rounded-xl border-2 border-input bg-background/50 px-4 py-2 text-sm focus-visible:outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
-                  value={formData.role} 
-                  onChange={e => setFormData({...formData, role: e.target.value as UserRole})}
-                >
-                  <option value="CAJERA">Cajera</option>
-                  <option value="DUENO">Dueño</option>
-                  <option value="DEVELOPER">Desarrollador</option>
-                </select>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 gap-4 py-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold">Username</label>
+                <Input
+                  required
+                  disabled={!!editingUser}
+                  placeholder="ej: cajera01"
+                  value={formData.username}
+                  onChange={e => setFormData({...formData, username: e.target.value})}
+                />
               </div>
-            )}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Contraseña {editingUser && "(Dejar en blanco para no cambiar)"}</label>
-              <Input type="password" required={!editingUser} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold">Nombre Completo</label>
+                <Input
+                  required
+                  placeholder="ej: María López"
+                  value={formData.name}
+                  onChange={e => setFormData({...formData, name: e.target.value})}
+                />
+              </div>
+
+              {!editingUser && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-semibold">Rol</label>
+                  <select
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    value={formData.role}
+                    onChange={e => setFormData({...formData, role: e.target.value as UserRole})}
+                  >
+                    <option value="CAJERA">Cajera</option>
+                    <option value="DUENO">Dueño</option>
+                    <option value="DEVELOPER">Desarrollador</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold">
+                  Contraseña{editingUser && <span className="text-muted-foreground font-normal"> (dejar vacío para no cambiar)</span>}
+                </label>
+                <Input
+                  type="password"
+                  required={!editingUser}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={e => setFormData({...formData, password: e.target.value})}
+                />
+              </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+
+            <DialogFooter className="gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
               <Button type="submit" disabled={createUser.isPending || updateUser.isPending}>
-                {editingUser ? "Guardar" : "Crear"}
+                {editingUser ? "Guardar Cambios" : "Crear Usuario"}
               </Button>
             </DialogFooter>
           </form>
