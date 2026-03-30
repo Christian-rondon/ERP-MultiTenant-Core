@@ -147,15 +147,11 @@ export default function Users() {
               {!editingUser && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold">Rol</label>
-                  <select
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  <Input
+                    placeholder="ej: CAJERA, DUENO, DEVELOPER"
                     value={formData.role}
                     onChange={e => setFormData({...formData, role: e.target.value as UserRole})}
-                  >
-                    <option value="CAJERA">Cajera</option>
-                    <option value="DUENO">Dueño</option>
-                    <option value="DEVELOPER">Desarrollador</option>
-                  </select>
+                  />
                 </div>
               )}
 
