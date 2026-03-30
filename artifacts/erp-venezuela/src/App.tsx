@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TrialGuard } from "@/components/TrialGuard";
+import { SuspendedScreen } from "@/components/SuspendedScreen";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -15,12 +16,15 @@ import Sales from "@/pages/Sales";
 import Reports from "@/pages/Reports";
 import Users from "@/pages/Users";
 import Settings from "@/pages/Settings";
+import Comercios from "@/pages/Comercios";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ component: Component, allowedRoles, ...rest }: any) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isSuspended } = useAuth();
+
+  if (isSuspended) return <SuspendedScreen />;
 
   if (isLoading) return <div className="h-screen w-full flex items-center justify-center bg-background"><div className="animate-pulse w-12 h-12 rounded-full bg-primary/20 border-4 border-primary"></div></div>;
   if (!user) return <Redirect to="/login" />;
@@ -35,7 +39,7 @@ function RootRedirect() {
   if (isLoading) return null;
   if (!user) return <Redirect to="/login" />;
   
-  if (user.role === "DEVELOPER") return <Redirect to="/users" />;
+  if (user.role === "DEVELOPER") return <Redirect to="/comercios" />;
   if (user.role === "DUENO") return <Redirect to="/dashboard" />;
   return <Redirect to="/pos" />;
 }
@@ -69,6 +73,9 @@ function Router() {
             </Route>
             <Route path="/settings">
               {() => <ProtectedRoute component={Settings} allowedRoles={["DEVELOPER"]} />}
+            </Route>
+            <Route path="/comercios">
+              {() => <ProtectedRoute component={Comercios} allowedRoles={["DEVELOPER"]} />}
             </Route>
             <Route component={NotFound} />
           </Switch>
