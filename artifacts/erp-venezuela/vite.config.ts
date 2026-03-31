@@ -5,12 +5,16 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
-      external: [],
+      external: [], // Aquí es donde Vercel se estaba quejando
+      output: {
+        manualChunks: undefined,
+      },
     }
   },
   server: {
-    port: Number(process.env.PORT) || 5173,
+    port: 5173,
     host: true
   }
 });
