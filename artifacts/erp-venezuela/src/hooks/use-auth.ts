@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchWithAuth, ApiError } from "./use-api";
+import { supabase } from "@/lib/supabase";
 import { User } from "@/lib/types";
 
 export function useAuth() {
@@ -8,39 +8,26 @@ export function useAuth() {
   const userQuery = useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => {
-      try {
-        return await fetchWithAuth<User>("/auth/me");
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          if (err.message.includes("COMERCIO_SUSPENDIDO")) {
-            localStorage.removeItem("erp_token");
-            throw new ApiError(403, "COMERCIO_SUSPENDIDO");
-          }
-          return null;
-        }
-        return null;
-      }
+      const token = localStorage.getItem("erp_token");
+      if (!token) return null;
+      const { data } = await supabase.from('users').select('*').eq('username', token).single();
+      return data as User;
     },
     retry: false,
-    staleTime: Infinity,
   });
-
-  const isSuspended =
-    userQuery.error instanceof ApiError &&
-    (userQuery.error as ApiError).message === "COMERCIO_SUSPENDIDO";
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: any) => {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Login failed");
-      }
-      return res.json() as Promise<{ user: User; token: string }>;
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', credentials.username)
+        .eq('password', credentials.password)
+        .single();
+
+      if (error || !data) throw new Error("Credenciales inválidas");
+      
+      return { user: data as User, token: data.username };
     },
     onSuccess: (data) => {
       localStorage.setItem("erp_token", data.token);
@@ -48,21 +35,15 @@ export function useAuth() {
     },
   });
 
-  const logoutMutation = useMutation({
-    mutationFn: () => fetchWithAuth("/auth/logout", { method: "POST" }),
-    onSettled: () => {
-      localStorage.removeItem("erp_token");
-      queryClient.setQueryData(["auth", "me"], null);
-      window.location.href = "/login";
-    },
-  });
-
   return {
     user: userQuery.data,
     isLoading: userQuery.isLoading,
-    isSuspended,
     login: loginMutation.mutateAsync,
-    logout: logoutMutation.mutate,
     isLoggingIn: loginMutation.isPending,
+    logout: () => {
+      localStorage.removeItem("erp_token");
+      queryClient.setQueryData(["auth", "me"], null);
+      window.location.href = "/login";
+    }
   };
 }
