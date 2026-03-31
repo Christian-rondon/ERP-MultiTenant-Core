@@ -12,7 +12,9 @@ import {
   Menu,
   Activity,
   Building2,
-  TrendingUp
+  TrendingUp,
+  Globe,
+  UsersRound
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBcvRate } from "@/hooks/use-bcv";
@@ -22,6 +24,7 @@ import { Button } from "./ui/button";
 
 const sidebarLinks = {
   DEVELOPER: [
+    { href: "/analytics", label: "Analytics Global", icon: Globe },
     { href: "/comercios", label: "Comercios", icon: Building2 },
     { href: "/users", label: "Usuarios", icon: Users },
     { href: "/settings", label: "Tasa BCV", icon: Settings },
@@ -31,6 +34,7 @@ const sidebarLinks = {
     { href: "/inventory", label: "Inventario", icon: Package },
     { href: "/sales", label: "Historial de Ventas", icon: History },
     { href: "/reports", label: "Reportes PDF", icon: FileText },
+    { href: "/team", label: "Mi Equipo", icon: UsersRound },
   ],
   CAJERA: [
     { href: "/pos", label: "Punto de Venta", icon: ShoppingCart },

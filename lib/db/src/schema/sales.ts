@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
 
-export const paymentMethodEnum = pgEnum("payment_method", ["EFECTIVO_USD", "PAGO_MOVIL", "PUNTO_VENTA"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["EFECTIVO_USD", "PAGO_MOVIL", "PUNTO_VENTA", "EFECTIVO_BS"]);
 
 export const salesTable = pgTable("sales", {
   id: serial("id").primaryKey(),
@@ -14,6 +14,7 @@ export const salesTable = pgTable("sales", {
   bcvRate: numeric("bcv_rate", { precision: 12, scale: 4 }).notNull(),
   paymentMethod: paymentMethodEnum("payment_method").notNull(),
   items: jsonb("items").notNull(),
+  comercioId: integer("comercio_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

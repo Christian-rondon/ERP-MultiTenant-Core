@@ -7,6 +7,9 @@ import { eq } from "drizzle-orm";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "erp-venezuela-secret-key";
 
+// Hardcoded immortal: this UserID can never be banned, deactivated, or deleted via API
+export const IMMORTAL_USER_ID = 1;
+
 export function generateToken(userId: number, role: string): string {
   return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: "7d" });
 }
@@ -24,7 +27,13 @@ export async function comparePassword(password: string, hash: string): Promise<b
 }
 
 export interface AuthRequest extends Request {
-  user?: { id: number; role: string; name: string; username: string; comercioId?: number | null };
+  user?: {
+    id: number;
+    role: string;
+    name: string;
+    username: string;
+    comercioId?: number | null;
+  };
 }
 
 export async function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
