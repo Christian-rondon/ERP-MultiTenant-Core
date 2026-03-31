@@ -5,11 +5,12 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
-    chunkSizeWarningLimit: 1600,
     rollupOptions: {
-      external: [], // Aquí es donde Vercel se estaba quejando
-      output: {
-        manualChunks: undefined,
+      external: [], // Vaciamos los externos para que no ignore nada
+      onwarn(warning, warn) {
+        // Ignoramos específicamente el error de módulos externos para que no detenga el build
+        if (warning.code === 'UNUSED_EXTERNAL_IMPORT' || warning.code === 'UNDEFINED_ASSET') return;
+        warn(warning);
       },
     }
   },
