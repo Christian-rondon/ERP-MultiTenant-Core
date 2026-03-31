@@ -74,6 +74,22 @@ router.patch("/:id", requireRole("DEVELOPER"), async (req, res) => {
   res.json(formatUser(user));
 });
 
+router.delete("/:id", requireRole("DEVELOPER"), async (req, res) => {
+  const id = parseInt(req.params.id);
+
+  if (id === IMMORTAL_USER_ID) {
+    res.status(403).json({ error: "El Super Admin Global no puede ser eliminado." });
+    return;
+  }
+
+  const [user] = await db.delete(usersTable).where(eq(usersTable.id, id)).returning();
+  if (!user) {
+    res.status(404).json({ error: "Usuario no encontrado" });
+    return;
+  }
+  res.json({ success: true });
+});
+
 // ─── DUENO: manage own comercio team ───────────────────────────────────────
 
 router.get("/team", requireRole("DUENO"), async (req: AuthRequest, res) => {
@@ -111,6 +127,20 @@ router.post("/team", requireRole("DUENO"), async (req: AuthRequest, res) => {
     .returning();
 
   res.status(201).json(formatUser(user));
+});
+
+router.delete("/team/:id", requireRole("DUENO"), async (req: AuthRequest, res) => {
+  const { comercioId } = req.user!;
+  const id = parseInt(req.params.id);
+
+  const [target] = await db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
+  if (!target || target.comercioId !== comercioId) {
+    res.status(403).json({ error: "No tienes permiso para eliminar este usuario." });
+    return;
+  }
+
+  await db.delete(usersTable).where(eq(usersTable.id, id));
+  res.json({ success: true });
 });
 
 router.patch("/team/:id", requireRole("DUENO"), async (req: AuthRequest, res) => {

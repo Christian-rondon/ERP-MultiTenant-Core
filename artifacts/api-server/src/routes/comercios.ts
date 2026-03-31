@@ -22,7 +22,14 @@ function formatComercio(c: typeof comerciosTable.$inferSelect) {
 
 router.get("/", async (_req, res) => {
   const comercios = await db.select().from(comerciosTable).orderBy(comerciosTable.createdAt);
-  res.json(comercios.map(formatComercio));
+  const allUsers = await db.select({ comercioId: usersTable.comercioId }).from(usersTable);
+
+  const countMap: Record<number, number> = {};
+  for (const u of allUsers) {
+    if (u.comercioId) countMap[u.comercioId] = (countMap[u.comercioId] || 0) + 1;
+  }
+
+  res.json(comercios.map(c => ({ ...formatComercio(c), userCount: countMap[c.id] || 0 })));
 });
 
 router.post("/", async (req, res) => {
@@ -69,6 +76,18 @@ router.patch("/:id", async (req, res) => {
   }
 
   res.json(formatComercio(comercio));
+});
+
+router.delete("/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  // Unlink users before deleting
+  await db.update(usersTable).set({ comercioId: null }).where(eq(usersTable.comercioId, id));
+  const [comercio] = await db.delete(comerciosTable).where(eq(comerciosTable.id, id)).returning();
+  if (!comercio) {
+    res.status(404).json({ error: "Comercio no encontrado" });
+    return;
+  }
+  res.json({ success: true });
 });
 
 router.post("/:id/users", async (req, res) => {

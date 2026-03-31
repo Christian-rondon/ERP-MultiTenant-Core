@@ -2,10 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchWithAuth } from "./use-api";
 import { Comercio } from "@/lib/types";
 
+export interface ComercioWithCount extends Comercio {
+  userCount: number;
+}
+
 export function useComercios() {
-  return useQuery<Comercio[]>({
+  return useQuery<ComercioWithCount[]>({
     queryKey: ["comercios"],
-    queryFn: () => fetchWithAuth<Comercio[]>("/comercios"),
+    queryFn: () => fetchWithAuth<ComercioWithCount[]>("/comercios"),
   });
 }
 
@@ -37,6 +41,14 @@ export function useToggleComercio() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive }),
       }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["comercios"] }),
+  });
+}
+
+export function useDeleteComercio() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => fetchWithAuth(`/comercios/${id}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["comercios"] }),
   });
 }
