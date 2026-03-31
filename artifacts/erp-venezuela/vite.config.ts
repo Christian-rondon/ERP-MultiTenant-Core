@@ -5,17 +5,14 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
-      external: [], // Vaciamos los externos para que no ignore nada
       onwarn(warning, warn) {
-        // Ignoramos específicamente el error de módulos externos para que no detenga el build
-        if (warning.code === 'UNUSED_EXTERNAL_IMPORT' || warning.code === 'UNDEFINED_ASSET') return;
+        // Ignoramos todos los avisos de módulos que detienen el build en Vercel
+        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
+        if (warning.message.includes('is not intentional')) return;
         warn(warning);
       },
     }
-  },
-  server: {
-    port: 5173,
-    host: true
   }
 });
