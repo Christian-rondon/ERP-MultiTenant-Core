@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      external: [], // Forzamos que no haya módulos externos bloqueados
+      external: [],
     }
   },
   server: {
