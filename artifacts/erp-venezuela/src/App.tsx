@@ -7,11 +7,10 @@ const supabase = createClient(
 );
 
 export default function App() {
-  const [view, setView] = useState('login'); // 'login' o 'dashboard'
+  const [view, setView] = useState('login'); 
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
 
-  // Verificación de sesión al cargar
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setView('dashboard');
