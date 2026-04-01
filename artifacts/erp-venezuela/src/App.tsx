@@ -10,6 +10,7 @@ const NEXO_LOGO_DATA = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEA
 
 export default function App() {
   const [view, setView] = useState('loading');
+  const [tab, setTab] = useState('comercios');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
 
@@ -22,54 +23,84 @@ export default function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (error) {
-      alert("Error Nexo: " + error.message);
-    } else {
-      setView('dashboard');
-    }
+    if (error) alert("Error: " + error.message);
+    else setView('dashboard');
   };
 
   if (view === 'loading') return <div style={{ background: '#020617', height: '100vh' }} />;
 
   if (view === 'dashboard') {
     return (
-      <div style={{ minHeight: '100vh', background: '#020617', color: 'white', padding: '20px', fontFamily: 'sans-serif' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 25px', background: 'rgba(255,255,255,0.03)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <img src={NEXO_LOGO_DATA} alt="Nexo" style={{ height: '40px', borderRadius: '50%' }} />
-            <span style={{ fontWeight: 'bold', letterSpacing: '2px' }}>NEXO VENEZUELA</span>
-          </div>
-          <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Salir</button>
-        </header>
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-          <h1 style={{ color: '#22d3ee' }}>Panel Nexo Activo</h1>
-          <p>Bienvenido al núcleo del ERP.</p>
+      <div style={{ minHeight: '100vh', background: '#020205', color: 'white', fontFamily: 'sans-serif' }}>
+        {/* Sidebar / Header Lateral */}
+        <div style={{ display: 'flex' }}>
+          <aside style={{ width: '260px', height: '100vh', background: '#0f172a', padding: '30px 20px', borderRight: '1px solid #1e293b' }}>
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+              <img src={NEXO_LOGO_DATA} alt="Nexo" style={{ width: '70px', borderRadius: '50%', border: '2px solid #22d3ee' }} />
+              <h2 style={{ fontSize: '18px', marginTop: '15px', letterSpacing: '2px' }}>SUPER ADMIN</h2>
+            </div>
+            
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button onClick={() => setTab('comercios')} style={tab === 'comercios' ? activeTabStyle : inactiveTabStyle}>🏢 Comercios</button>
+              <button onClick={() => setTab('usuarios')} style={tab === 'usuarios' ? activeTabStyle : inactiveTabStyle}>👥 Usuarios</button>
+              <button onClick={() => setTab('config')} style={tab === 'config' ? activeTabStyle : inactiveTabStyle}>⚙️ Configuración</button>
+              <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ ...inactiveTabStyle, color: '#ef4444', marginTop: '50px' }}>🚪 Salir</button>
+            </nav>
+          </aside>
+
+          <main style={{ flex: 1, padding: '40px' }}>
+            {tab === 'comercios' && (
+              <div>
+                <h1 style={{ color: '#22d3ee' }}>Gestión de Comercios</h1>
+                <p style={{ color: '#94a3b8' }}>Registra y administra los locales conectados a Nexo.</p>
+                <button style={btnActionStyle}>+ Registrar Nuevo Comercio</button>
+                <div style={cardStyle}>
+                  <p>No hay comercios registrados aún.</p>
+                </div>
+              </div>
+            )}
+            
+            {tab === 'usuarios' && (
+              <div>
+                <h1 style={{ color: '#22d3ee' }}>Usuarios del Sistema</h1>
+                <div style={cardStyle}>Lista de Dueños y Cajeras aparecerá aquí.</div>
+              </div>
+            )}
+
+            {tab === 'config' && (
+              <div>
+                <h1 style={{ color: '#22d3ee' }}>Configuración Maestra</h1>
+                <div style={cardStyle}>
+                  <label>Tasa del Dólar (BCV):</label>
+                  <input type="number" placeholder="Ej: 36.50" style={inputStyle} />
+                  <button style={btnActionStyle}>Actualizar Tasa</button>
+                </div>
+              </div>
+            )}
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', 
-      background: 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)',
-      fontFamily: 'sans-serif'
-    }}>
-      <div style={{ textAlign: 'center', width: '100%', maxWidth: '380px', padding: '50px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-        <div style={{ width: '110px', height: '110px', margin: '0 auto 25px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #22d3ee', boxShadow: '0 0 30px rgba(34, 211, 238, 0.3)' }}>
-          <img src={NEXO_LOGO_DATA} alt="Nexo Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        <h1 style={{ color: 'white', letterSpacing: '6px', margin: '0', fontSize: '36px', fontWeight: '900' }}>NEXO</h1>
-        <p style={{ color: '#64748b', fontSize: '13px', letterSpacing: '4px', marginBottom: '40px', textTransform: 'uppercase' }}>Venezuela</p>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)' }}>
+      <div style={{ textAlign: 'center', width: '380px', padding: '50px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <img src={NEXO_LOGO_DATA} style={{ width: '100px', marginBottom: '20px' }} />
+        <h1 style={{ color: 'white', letterSpacing: '5px' }}>NEXO</h1>
         <form onSubmit={handleLogin}>
-          <input type="email" placeholder="Usuario Nexo" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} required />
-          <input type="password" placeholder="Contraseña" value={pass} onChange={e => setPass(e.target.value)} style={inputStyle} required />
-          <button type="submit" style={btnStyle}>ENTRAR AL SISTEMA</button>
+          <input type="email" placeholder="Usuario" onChange={e => setEmail(e.target.value)} style={inputStyle} />
+          <input type="password" placeholder="Contraseña" onChange={e => setPass(e.target.value)} style={inputStyle} />
+          <button type="submit" style={btnStyle}>ENTRAR</button>
         </form>
       </div>
     </div>
   );
 }
 
-const inputStyle = { width: '100%', padding: '16px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: 'white', outline: 'none' };
-const btnStyle = { width: '100%', padding: '16px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '16px', color: '#020617', fontWeight: 'bold', cursor: 'pointer' };
+const activeTabStyle = { padding: '15px', background: '#1e293b', border: 'none', borderRadius: '12px', color: '#22d3ee', textAlign: 'left', cursor: 'pointer', fontWeight: 'bold' };
+const inactiveTabStyle = { padding: '15px', background: 'transparent', border: 'none', color: '#94a3b8', textAlign: 'left', cursor: 'pointer' };
+const cardStyle = { background: '#0f172a', padding: '30px', borderRadius: '20px', border: '1px solid #1e293b', marginTop: '20px' };
+const btnActionStyle = { padding: '12px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', marginTop: '20px', cursor: 'pointer' };
+const inputStyle = { width: '100%', padding: '15px', margin: '10px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white' };
+const btnStyle = { width: '100%', padding: '15px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '12px', color: '#020617', fontWeight: 'bold' };
