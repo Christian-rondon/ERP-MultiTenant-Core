@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
 
-// PALETA NEXO (AZUL DE TUS FOTOS)
+// PALETA DE COLORES NEXO (image_1.jpeg)
 const COLORS = {
-  bg_deep: '#010206',
-  bg_panel: '#0a0f1e',
-  accent: '#22d3ee',
-  text_main: '#f8fafc',
-  text_muted: '#94a3b8',
-  border: '#1e293b'
+  bg_deep: '#010206',       // Fondo base negro/muy oscuro
+  bg_panel: '#0a0f1e',      // Fondo de paneles azul oscuro profundo
+  accent: '#22d3ee',        // Cian vibrante Nexo
+  accent_blue: '#2563eb',   // Azul vibrante para degradados
+  text_main: '#f8fafc',     
+  text_muted: '#64748b',    
+  border: '#1e293b'         // Borde oscuro sutil
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('Configuración');
-  
-  // ESTADO DE TASA MANUAL
-  const [globalRate, setGlobalRate] = useState(471.70);
-  const [lastUpdate, setLastUpdate] = useState('01/04/2026, 05:45 p. m.');
-  const [manualValue, setManualValue] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [view, setView] = useState('dashboard');
 
   const menuItems = [
     { name: 'Dashboard', icon: '📊' },
@@ -26,28 +22,8 @@ export default function App() {
     { name: 'Ventas', icon: '💵' },
     { name: 'Reportes', icon: '📈' },
     { name: 'Comercios', icon: '🏢' },
-    { name: 'Usuarios', icon: '👥' },
     { name: 'Configuración', icon: '⚙️' }
   ];
-
-  // FUNCIÓN PARA ACTUALIZAR MANUALMENTE EN TODA LA RED
-  const handleManualSync = () => {
-    if (!manualValue || isNaN(parseFloat(manualValue))) return alert("Socio, ingresa un número válido.");
-    
-    setIsUpdating(true);
-    
-    // Simulación de guardado en base de datos
-    setTimeout(() => {
-      setGlobalRate(parseFloat(manualValue));
-      setLastUpdate(new Date().toLocaleString('es-VE', { 
-        day: '2-digit', month: '2-digit', year: 'numeric', 
-        hour: '2-digit', minute: '2-digit', hour12: true 
-      }));
-      setManualValue('');
-      setIsUpdating(false);
-      alert("✅ Éxito: Nueva tasa aplicada a todos los comercios.");
-    }, 800);
-  };
 
   return (
     <div style={dashLayout}>
@@ -59,93 +35,115 @@ export default function App() {
         </div>
         <nav style={navS}>
           {menuItems.map(item => (
-            <button 
-              key={item.name} 
-              onClick={() => setActiveTab(item.name)} 
-              style={activeTab === item.name ? tActive : tInactive}
-            >
+            <button key={item.name} onClick={() => setActiveTab(item.name)} style={activeTab === item.name ? tActive : tInactive}>
               <span style={{ marginRight: '12px' }}>{item.icon}</span>{item.name}
             </button>
           ))}
         </nav>
       </aside>
 
-      {/* CONTENIDO */}
+      {/* ÁREA DE CONTENIDO PRINCIPAL */}
       <main style={mainS}>
-        <header style={{ marginBottom: '30px' }}>
-          <h1 style={titleS}>{activeTab}</h1>
+        <header style={headerFlex}>
+          <div>
+            <h1 style={titleS}>Dashboard</h1>
+            <p style={dateS}>miércoles, 1 de abril de 2026</p>
+          </div>
+          <button style={btnActionHead}>
+            <span style={{marginRight: '8px'}}>🛍️</span> Nueva Venta
+          </button>
         </header>
 
-        {activeTab === 'Configuración' ? (
-          <div style={configCard}>
-            <h3 style={{ margin: '0 0 10px 0', color: COLORS.accent }}>Ajustes de Moneda</h3>
-            <p style={{ color: COLORS.text_muted, fontSize: '14px', marginBottom: '30px' }}>
-              Control centralizado del tipo de cambio para facturación.
-            </p>
-
-            <div style={tasaDisplayRow}>
-              <div>
-                <p style={tLabel}>TASA ACTUAL EN RED</p>
-                <h2 style={tValue}>Bs. {globalRate.toFixed(2)}</h2>
-                <p style={tMeta}>Último cambio: {lastUpdate}</p>
-              </div>
-              <div style={statusBadge}>● Sincronizado</div>
-            </div>
-
-            <div style={divider}></div>
-
-            <div style={inputContainer}>
-              <p style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '10px' }}>Establecer Nueva Tasa (Manual)</p>
-              <div style={{ display: 'flex', gap: '15px' }}>
-                <input 
-                  style={posInput} 
-                  type="number" 
-                  placeholder="Ej: 475.50" 
-                  value={manualValue}
-                  onChange={(e) => setManualValue(e.target.value)}
-                />
-                <button 
-                  onClick={handleManualSync} 
-                  style={{ ...btnSync, opacity: isUpdating ? 0.6 : 1 }}
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? 'Actualizando...' : 'Actualizar Red'}
-                </button>
-              </div>
-              <p style={warnNote}>⚠️ Esta acción cambiará los precios en todos los Punto de Venta registrados inmediatamente.</p>
-            </div>
+        {/* 1. FILA DE KPIs (Replica image_12.png) */}
+        <div style={kpiGrid}>
+          {/* Tarjeta de Ingresos USD (Con Degradado) */}
+          <div style={kpiCardUSD}>
+            <div style={kpiHeaderRow}><p style={kpiLabelW}>Ingresos Hoy</p><span style={iconKpiW}>$</span></div>
+            <h2 style={kpiValueW}>USD 0,00</h2>
+            <p style={kpiSubW}>Bs.S 0,00</p>
           </div>
-        ) : (
-          <div style={configCard}>
-            <p style={{ color: COLORS.text_muted }}>Módulo <b>{activeTab}</b> operando con Tasa: Bs. {globalRate.toFixed(2)}</p>
+
+          <div style={kpiCard}>
+            <div style={kpiHeaderRow}><p style={kpiLabel}>Transacciones</p><span style={iconKpiG}>📉</span></div>
+            <h2 style={kpiValue}>0</h2>
+            <p style={kpiSub}>Ticket: USD 0,00</p>
           </div>
-        )}
+
+          <div style={kpiCard}>
+            <div style={kpiHeaderRow}><p style={kpiLabel}>Tasa BCV</p><span style={iconKpiG}>📈</span></div>
+            <h2 style={kpiValue}>471.70</h2>
+            <p style={kpiSub}>Automática</p>
+          </div>
+
+          <div style={kpiCard}>
+            <div style={kpiHeaderRow}><p style={kpiLabel}>Ingresos Bs</p><span style={iconKpiG}>🛅</span></div>
+            <h2 style={kpiValue}>0</h2>
+            <p style={kpiSub}>Bolívares del día</p>
+          </div>
+        </div>
+
+        {/* 2. FILA CENTRAL (Gráficos) */}
+        <div style={chartsGrid}>
+          <div style={chartBox}>
+            <h3 style={chartTitle}>Ventas Últimos 14 Días</h3>
+            <div style={emptyChartPlaceholder}>[ Gráfico de Líneas ]</div>
+          </div>
+          <div style={chartBox}>
+            <h3 style={chartTitle}>Métodos de Pago (Hoy)</h3>
+            <div style={emptyChartPlaceholder}>Sin ventas hoy</div>
+          </div>
+        </div>
+
+        {/* 3. BARRA INFERIOR DE ACCESOS RÁPIDOS */}
+        <div style={quickActionsGrid}>
+          <div style={quickActionBtn}>🛍️ <br/> Nueva Venta</div>
+          <div style={{...quickActionBtn, color: '#a855f7'}}>📦 <br/> Inventario</div>
+          <div style={{...quickActionBtn, color: '#10b981'}}>⚡ <br/> Historial</div>
+          <div style={{...quickActionBtn, color: '#f59e0b'}}>📈 <br/> Reportes</div>
+        </div>
       </main>
     </div>
   );
 }
 
-// ESTILOS 100% MANUAL Y AZUL PROFUNDO
+// --- ESTILOS DE ALTO NIVEL (RÉPLICA image_12.png) ---
 const dashLayout = { display: 'flex', height: '100vh', background: COLORS.bg_deep, color: COLORS.text_main, fontFamily: 'sans-serif' };
 const sidebarS = { width: '280px', background: COLORS.bg_panel, padding: '25px', borderRight: `1px solid ${COLORS.border}`, display: 'flex', flexDirection: 'column' };
 const sideHeader = { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '40px' };
 const sideLogoContainer = { width: '45px', height: '45px', background: COLORS.accent, borderRadius: '12px', overflow: 'hidden' };
 const fullImg = { width: '100%', height: '100%', objectFit: 'cover' };
-const brandName = { margin: 0, fontWeight: 'bold', fontSize: '16px' };
+const brandName = { margin: 0, fontWeight: 'bold', fontSize: '16px', color: COLORS.text_main };
 const brandSub = { margin: 0, fontSize: '11px', color: COLORS.text_muted };
 const navS = { display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 };
 const tActive = { padding: '14px 18px', background: 'rgba(34,211,238,0.1)', color: COLORS.accent, borderRadius: '15px', border: `1px solid ${COLORS.accent}`, textAlign: 'left', cursor: 'pointer', fontWeight: 'bold' };
 const tInactive = { padding: '14px 18px', background: 'transparent', color: COLORS.text_muted, borderRadius: '15px', border: 'none', textAlign: 'left', cursor: 'pointer' };
+
 const mainS = { flex: 1, padding: '40px', overflowY: 'auto' };
-const titleS = { margin: 0, fontSize: '34px', fontWeight: '800' };
-const configCard = { background: COLORS.bg_panel, padding: '35px', borderRadius: '25px', border: `1px solid ${COLORS.border}`, maxWidth: '800px' };
-const tasaDisplayRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'rgba(255,255,255,0.03)', padding: '25px', borderRadius: '20px' };
-const tLabel = { margin: 0, fontSize: '12px', color: COLORS.text_muted, fontWeight: 'bold' };
-const tValue = { fontSize: '52px', color: COLORS.accent, fontWeight: '900', margin: '5px 0' };
-const tMeta = { margin: 0, fontSize: '12px', color: COLORS.text_muted };
-const statusBadge = { background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '6px 12px', borderRadius: '30px', fontSize: '10px', fontWeight: 'bold' };
-const divider = { height: '1px', background: COLORS.border, margin: '30px 0' };
-const inputContainer = { display: 'flex', flexDirection: 'column' };
-const posInput = { background: '#010206', border: `1px solid ${COLORS.border}`, borderRadius: '12px', color: 'white', padding: '15px', width: '200px', fontSize: '16px', outline: 'none' };
-const btnSync = { padding: '0 30px', background: COLORS.accent, border: 'none', color: '#010206', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' };
-const warnNote = { color: '#f59e0b', fontSize: '12px', marginTop: '15px', fontStyle: 'italic' };
+const headerFlex = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' };
+const titleS = { margin: 0, fontSize: '32px', fontWeight: '800' };
+const dateS = { margin: '5px 0', color: COLORS.text_muted, fontSize: '14px' };
+const btnActionHead = { padding: '12px 20px', background: 'rgba(37,99,235,0.1)', color: '#fff', border: `1px solid ${COLORS.accent_blue}`, borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' };
+
+// GRID KPIs (Fila superior)
+const kpiGrid = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' };
+const kpiCard = { background: COLORS.bg_panel, padding: '20px', borderRadius: '18px', border: `1px solid ${COLORS.border}` };
+const kpiCardUSD = { ...kpiCard, background: `linear-gradient(135deg, ${COLORS.accent_blue} 0%, rgba(37,99,235,0.7) 100%)`, border: 'none', boxShadow: `0 10px 20px rgba(37,99,235,0.2)` };
+const kpiHeaderRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+const kpiLabel = { margin: 0, fontSize: '12px', color: COLORS.text_muted, fontWeight: 'bold' };
+const kpiLabelW = { ...kpiLabel, color: 'rgba(255,255,255,0.8)' };
+const iconKpiG = { color: COLORS.text_muted };
+const iconKpiW = { color: '#fff' };
+const kpiValue = { margin: '15px 0 5px 0', fontSize: '28px', fontWeight: '900', color: COLORS.text_main };
+const kpiValueW = { ...kpiValue, color: '#fff' };
+const kpiSub = { margin: 0, fontSize: '12px', color: COLORS.text_muted };
+const kpiSubW = { ...kpiSub, color: 'rgba(255,255,255,0.7)' };
+
+// GRID GRÁFICOS (Fila central)
+const chartsGrid = { display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '20px', marginBottom: '30px' };
+const chartBox = { background: COLORS.bg_panel, padding: '25px', borderRadius: '20px', border: `1px solid ${COLORS.border}`, minHeight: '320px' };
+const chartTitle = { margin: '0 0 20px 0', fontSize: '16px', fontWeight: 'bold' };
+const emptyChartPlaceholder = { height: '230px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '14px', border: '1px dashed #1e293b', borderRadius: '15px' };
+
+// BARRA INFERIOR DE ACCESOS RÁPIDOS
+const quickActionsGrid = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' };
+const quickActionBtn = { background: COLORS.bg_panel, padding: '20px', borderRadius: '15px', border: `1px solid ${COLORS.border}`, textAlign: 'center', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' };
