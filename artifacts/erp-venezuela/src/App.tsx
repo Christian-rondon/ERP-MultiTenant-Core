@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import SalesModule from './components/dashboard/SalesModule';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || '',
@@ -11,8 +12,12 @@ const NEXO_LOGO_DATA = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEA
 export default function App() {
   const [view, setView] = useState('loading');
   const [tab, setTab] = useState('comercios');
+  const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
+  
+  // Estado para el nuevo comercio
+  const [newComercio, setNewComercio] = useState({ nombre: '', rif: '', tipo: 'Panadería' });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -27,63 +32,80 @@ export default function App() {
     else setView('dashboard');
   };
 
+  const registrarComercio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Aquí conectaremos con la tabla 'tenants' de Supabase en el futuro
+    console.log("Registrando:", newComercio);
+    alert("Comercio " + newComercio.nombre + " registrado exitosamente en Nexo.");
+    setShowModal(false);
+    setNewComercio({ nombre: '', rif: '', tipo: 'Panadería' });
+  };
+
   if (view === 'loading') return <div style={{ background: '#020617', height: '100vh' }} />;
 
   if (view === 'dashboard') {
     return (
       <div style={{ minHeight: '100vh', background: '#010206', color: 'white', fontFamily: 'sans-serif' }}>
         <div style={{ display: 'flex' }}>
-          {/* SIDEBAR CON DEGRADADO PROFUNDO */}
-          <aside style={{ width: '280px', height: '100vh', background: 'linear-gradient(180deg, #0f172a 0%, #010206 100%)', padding: '40px 25px', borderRight: '1px solid rgba(34,211,238,0.1)', boxShadow: '5px 0 20px rgba(0,0,0,0.4)' }}>
+          {/* SIDEBAR */}
+          <aside style={sidebarStyle}>
             <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-              <img src={NEXO_LOGO_DATA} alt="Nexo" style={{ width: '80px', borderRadius: '50%', border: '3px solid #22d3ee', boxShadow: '0 0 20px rgba(34,211,238,0.4)' }} />
-              <h2 style={{ fontSize: '20px', marginTop: '20px', letterSpacing: '3px', fontWeight: 'bold' }}>SUPER ADMIN</h2>
-              <div style={{height:'3px', width:'60px', background:'linear-gradient(90deg, #2563eb, #22d3ee)', margin:'15px auto', borderRadius:'10px'}}></div>
+              <img src={NEXO_LOGO_DATA} alt="Nexo" style={logoStyle} />
+              <h2 style={{ fontSize: '20px', marginTop: '20px', letterSpacing: '3px' }}>SUPER ADMIN</h2>
             </div>
-            
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <button onClick={() => setTab('comercios')} style={tab === 'comercios' ? activeTabStyle : inactiveTabStyle}>
-                <span style={{fontSize:'1.2em'}}>🏢</span> Comercios
-              </button>
-              <button onClick={() => setTab('usuarios')} style={tab === 'usuarios' ? activeTabStyle : inactiveTabStyle}>
-                <span style={{fontSize:'1.2em'}}>👥</span> Usuarios
-              </button>
-              <button onClick={() => setTab('config')} style={tab === 'config' ? activeTabStyle : inactiveTabStyle}>
-                <span style={{fontSize:'1.2em'}}>⚙️</span> Configuración
-              </button>
-              
-              <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ ...inactiveTabStyle, color: '#ff4d4d', marginTop: '60px', fontWeight:'bold' }}>
-                <span style={{fontSize:'1.2em'}}>🚪</span> Salir
-              </button>
+              <button onClick={() => setTab('comercios')} style={tab === 'comercios' ? activeTabStyle : inactiveTabStyle}>🏢 Comercios</button>
+              <button onClick={() => setTab('usuarios')} style={tab === 'usuarios' ? activeTabStyle : inactiveTabStyle}>👥 Usuarios</button>
+              <button onClick={() => setTab('config')} style={tab === 'config' ? activeTabStyle : inactiveTabStyle}>⚙️ Configuración</button>
+              <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ ...inactiveTabStyle, color: '#ff4d4d', marginTop: '60px' }}>Salir</button>
             </nav>
           </aside>
 
-          {/* ÁREA DE CONTENIDO */}
-          <main style={{ flex: 1, padding: '50px 60px' }}>
+          {/* ÁREA PRINCIPAL */}
+          <main style={{ flex: 1, padding: '50px' }}>
             {tab === 'comercios' && (
               <div>
-                <h1 style={{ color: '#22d3ee', fontSize:'36px', textShadow:'0 0 10px rgba(34,211,238,0.5)', letterSpacing:'1px', marginBottom:'10px' }}>Gestión de Comercios</h1>
-                <p style={{ color: '#94a3b8', fontSize:'16px' }}>Registra y administra los locales conectados a Nexo.</p>
-                {/* BOTÓN CON DEGRADADO VIBRANTE */}
-                <button style={btnActionStyle}>+ Registrar Nuevo Comercio</button>
-                {/* TARJETA CON EFECTO GLASS + BORDE CIAN */}
-                <div style={cardStyle}>
-                  <p style={{color:'#94a3b8', fontSize:'18px'}}>No hay comercios registrados aún.</p>
+                <h1 style={titleStyle}>Gestión de Comercios</h1>
+                <button onClick={() => setShowModal(true)} style={btnActionStyle}>+ Registrar Nuevo Comercio</button>
+                <div style={{marginTop: '30px'}}>
+                   <SalesModule />
                 </div>
               </div>
             )}
-            
-            {/* ... Resto de los tabs se mantienen ... */}
           </main>
         </div>
+
+        {/* MODAL DE REGISTRO */}
+        {showModal && (
+          <div style={modalOverlayStyle}>
+            <div style={modalContentStyle}>
+              <h2 style={{color: '#22d3ee', marginBottom: '20px'}}>Nuevo Comercio Nexo</h2>
+              <form onSubmit={registrarComercio}>
+                <input type="text" placeholder="Nombre del Negocio" required style={inputStyle} 
+                  onChange={e => setNewComercio({...newComercio, nombre: e.target.value})} />
+                <input type="text" placeholder="RIF (Ej: J-12345678)" required style={inputStyle} 
+                  onChange={e => setNewComercio({...newComercio, rif: e.target.value})} />
+                <select style={inputStyle} onChange={e => setNewComercio({...newComercio, tipo: e.target.value})}>
+                  <option>Panadería</option>
+                  <option>Farmacia</option>
+                  <option>Repuestos</option>
+                  <option>Supermercado</option>
+                </select>
+                <div style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+                  <button type="submit" style={btnStyle}>GUARDAR</button>
+                  <button type="button" onClick={() => setShowModal(false)} style={{...btnStyle, background: '#334155'}}>CANCELAR</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // Vista de Login se mantiene
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)' }}>
-      <div style={{ textAlign: 'center', width: '380px', padding: '50px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div style={loginContainerStyle}>
+      <div style={loginBoxStyle}>
         <img src={NEXO_LOGO_DATA} style={{ width: '100px', marginBottom: '20px' }} />
         <h1 style={{ color: 'white', letterSpacing: '5px' }}>NEXO</h1>
         <form onSubmit={handleLogin}>
@@ -96,30 +118,16 @@ export default function App() {
   );
 }
 
-// NUEVOS ESTILOS LLAMATIVOS
-const activeTabStyle = { 
-  display: 'flex', gap: '15px', alignItems: 'center', padding: '16px 20px', 
-  background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.3)', 
-  borderRadius: '16px', color: '#22d3ee', textAlign: 'left', cursor: 'pointer', 
-  fontWeight: 'bold', fontSize: '16px', textShadow: '0 0 10px rgba(34,211,238,0.6)',
-  transition: 'all 0.3s ease'
-};
-const inactiveTabStyle = { 
-  display: 'flex', gap: '15px', alignItems: 'center', padding: '16px 20px', 
-  background: 'transparent', border: 'none', color: '#94a3b8', 
-  textAlign: 'left', cursor: 'pointer', fontSize: '16px', transition: 'all 0.3s ease'
-};
-const cardStyle = { 
-  background: 'rgba(15,23,42,0.4)', padding: '40px', borderRadius: '24px', 
-  border: '1px solid rgba(34,211,238,0.1)', marginTop: '25px', backdropFilter: 'blur(10px)',
-  boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
-};
-const btnActionStyle = { 
-  padding: '16px 30px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', 
-  color: '#010206', border: 'none', borderRadius: '30px', marginTop: '25px', 
-  cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', letterSpacing:'1px', 
-  textTransform:'uppercase', boxShadow: '0 5px 20px rgba(34,211,238,0.4)', transition: 'all 0.3s ease'
-};
-
+// ESTILOS MEJORADOS
+const sidebarStyle = { width: '280px', height: '100vh', background: 'linear-gradient(180deg, #0f172a 0%, #010206 100%)', padding: '40px 25px', borderRight: '1px solid rgba(34,211,238,0.1)' };
+const logoStyle = { width: '80px', borderRadius: '50%', border: '3px solid #22d3ee', boxShadow: '0 0 20px rgba(34,211,238,0.4)' };
+const titleStyle = { color: '#22d3ee', fontSize:'36px', textShadow:'0 0 10px rgba(34,211,238,0.5)' };
+const activeTabStyle = { padding: '16px', background: 'rgba(34,211,238,0.1)', border: '1px solid #22d3ee', borderRadius: '16px', color: '#22d3ee', width: '100%', cursor: 'pointer', fontWeight: 'bold' };
+const inactiveTabStyle = { padding: '16px', background: 'transparent', border: 'none', color: '#94a3b8', width: '100%', textAlign: 'left', cursor: 'pointer' };
+const btnActionStyle = { padding: '16px 30px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 5px 20px rgba(34,211,238,0.4)' };
+const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 };
+const modalContentStyle = { background: '#0f172a', padding: '40px', borderRadius: '24px', border: '1px solid #22d3ee', width: '400px' };
 const inputStyle = { width: '100%', padding: '15px', margin: '10px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white' };
-const btnStyle = { width: '100%', padding: '15px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '12px', color: '#020617', fontWeight: 'bold' };
+const btnStyle = { flex: 1, padding: '15px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '12px', color: '#020617', fontWeight: 'bold', cursor: 'pointer' };
+const loginContainerStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)' };
+const loginBoxStyle = { textAlign: 'center', width: '380px', padding: '50px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.1)' };
