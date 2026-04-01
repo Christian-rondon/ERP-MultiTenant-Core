@@ -15,7 +15,6 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
-  const [newComercio, setNewComercio] = useState({ nombre: '', rif: '', tipo: 'Panadería' });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -23,99 +22,67 @@ export default function App() {
     });
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (error) alert("Error: " + error.message);
-    else setView('dashboard');
-  };
-
-  const registrarComercio = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert("Nexo ERP: Comercio " + newComercio.nombre + " registrado.");
-    setShowModal(false);
-  };
-
   if (view === 'loading') return <div style={{ background: '#020617', height: '100vh' }} />;
 
   if (view === 'dashboard') {
     return (
-      <div style={{ minHeight: '100vh', background: '#010206', color: 'white', fontFamily: 'sans-serif' }}>
-        <div style={{ display: 'flex' }}>
-          {/* SIDEBAR NEÓN */}
-          <aside style={sidebarStyle}>
-            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-              <img src={NEXO_LOGO_DATA} alt="Nexo" style={logoStyle} />
-              <h2 style={{ fontSize: '18px', marginTop: '15px', letterSpacing: '2px' }}>SUPER ADMIN</h2>
-            </div>
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button onClick={() => setTab('comercios')} style={tab === 'comercios' ? activeTabStyle : inactiveTabStyle}>🏢 Comercios</button>
-              <button onClick={() => setTab('usuarios')} style={tab === 'usuarios' ? activeTabStyle : inactiveTabStyle}>👥 Usuarios</button>
-              <button onClick={() => setTab('config')} style={tab === 'config' ? activeTabStyle : inactiveTabStyle}>⚙️ Configuración</button>
-              <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ ...inactiveTabStyle, color: '#ff4d4d', marginTop: '40px' }}>Salir</button>
-            </nav>
-          </aside>
-
-          {/* CONTENIDO PRINCIPAL */}
-          <main style={{ flex: 1, padding: '40px' }}>
-            {tab === 'comercios' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                  <h1 style={{ color: '#22d3ee', margin: 0 }}>Gestión de Comercios</h1>
-                  <button onClick={() => setShowModal(true)} style={btnActionStyle}>+ Registrar Nuevo Comercio</button>
-                </div>
-                <SalesModule />
-              </div>
-            )}
-          </main>
-        </div>
-
-        {/* MODAL FUNCIONAL */}
+      <div style={{ minHeight: '100vh', background: '#010206', color: 'white', fontFamily: 'sans-serif', position: 'relative' }}>
+        
+        {/* MODAL CON Z-INDEX MÁXIMO (Aislado arriba) */}
         {showModal && (
-          <div style={modalOverlayStyle}>
-            <div style={modalContentStyle}>
-              <h2 style={{color: '#22d3ee', marginBottom: '20px'}}>Registrar Negocio</h2>
-              <form onSubmit={registrarComercio}>
-                <input type="text" placeholder="Nombre" required style={inputStyle} onChange={e => setNewComercio({...newComercio, nombre: e.target.value})} />
-                <input type="text" placeholder="RIF" required style={inputStyle} onChange={e => setNewComercio({...newComercio, rif: e.target.value})} />
-                <select style={inputStyle} onChange={e => setNewComercio({...newComercio, tipo: e.target.value})}>
-                  <option>Panadería</option><option>Farmacia</option><option>Repuestos</option>
-                </select>
-                <div style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
-                  <button type="submit" style={btnStyle}>GUARDAR</button>
-                  <button type="button" onClick={() => setShowModal(false)} style={{...btnStyle, background: '#334155'}}>CANCELAR</button>
-                </div>
-              </form>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+            <div style={{ background: '#0f172a', padding: '40px', borderRadius: '24px', border: '2px solid #22d3ee', width: '400px', boxShadow: '0 0 50px rgba(34,211,238,0.3)' }}>
+              <h2 style={{ color: '#22d3ee', marginBottom: '20px' }}>Nuevo Comercio Nexo</h2>
+              <input type="text" placeholder="Nombre del Negocio" style={inputStyle} />
+              <input type="text" placeholder="RIF" style={inputStyle} />
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button onClick={() => { alert('Guardado'); setShowModal(false); }} style={btnStyle}>GUARDAR</button>
+                <button onClick={() => setShowModal(false)} style={{ ...btnStyle, background: '#334155' }}>CERRAR</button>
+              </div>
             </div>
           </div>
         )}
+
+        <div style={{ display: 'flex' }}>
+          {/* SIDEBAR */}
+          <aside style={{ width: '260px', height: '100vh', background: '#0f172a', padding: '30px 20px', borderRight: '1px solid #1e293b' }}>
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+              <img src={NEXO_LOGO_DATA} style={{ width: '70px', borderRadius: '50%', border: '2px solid #22d3ee' }} />
+              <p style={{ letterSpacing: '2px', fontWeight: 'bold', marginTop: '10px' }}>SUPER ADMIN</p>
+            </div>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button onClick={() => setTab('comercios')} style={tab === 'comercios' ? activeStyle : inactiveStyle}>🏢 Comercios</button>
+              <button onClick={() => setTab('usuarios')} style={tab === 'usuarios' ? activeStyle : inactiveStyle}>👥 Usuarios</button>
+              <button onClick={() => setTab('config')} style={tab === 'config' ? activeStyle : inactiveStyle}>⚙️ Config</button>
+            </nav>
+          </aside>
+
+          {/* CONTENIDO */}
+          <main style={{ flex: 1, padding: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+              <h1 style={{ color: '#22d3ee', fontSize: '32px' }}>Panel de Control</h1>
+              <button 
+                onClick={() => { console.log("Click detectado"); setShowModal(true); }} 
+                style={{ padding: '15px 30px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', color: '#000' }}
+              >
+                + REGISTRAR COMERCIO
+              </button>
+            </div>
+            <SalesModule />
+          </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={loginStyleContainer}>
-       <div style={loginBoxStyle}>
-        <img src={NEXO_LOGO_DATA} style={{ width: '100px', marginBottom: '20px' }} />
-        <h1 style={{ color: 'white', letterSpacing: '5px' }}>NEXO</h1>
-        <form onSubmit={handleLogin}>
-          <input type="email" placeholder="Usuario" onChange={e => setEmail(e.target.value)} style={inputStyle} />
-          <input type="password" placeholder="Contraseña" onChange={e => setPass(e.target.value)} style={inputStyle} />
-          <button type="submit" style={btnStyle}>ENTRAR</button>
-        </form>
-      </div>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#020617' }}>
+      <button onClick={() => setView('dashboard')} style={btnStyle}>ENTRAR (BYPASS)</button>
     </div>
   );
 }
 
-const sidebarStyle = { width: '260px', height: '100vh', background: '#0f172a', padding: '30px 20px', borderRight: '1px solid rgba(34,211,238,0.2)' };
-const logoStyle = { width: '70px', borderRadius: '50%', border: '2px solid #22d3ee' };
-const activeTabStyle = { padding: '15px', background: 'rgba(34,211,238,0.1)', border: '1px solid #22d3ee', borderRadius: '12px', color: '#22d3ee', cursor: 'pointer', fontWeight: 'bold', width: '100%', textAlign: 'left' };
-const inactiveTabStyle = { padding: '15px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', width: '100%', textAlign: 'left' };
-const btnActionStyle = { padding: '12px 25px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '30px', color: '#010206', fontWeight: 'bold', cursor: 'pointer' };
-const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 };
-const modalContentStyle = { background: '#0f172a', padding: '35px', borderRadius: '24px', border: '1px solid #22d3ee', width: '400px', boxShadow: '0 0 30px rgba(34,211,238,0.2)' };
-const inputStyle = { width: '100%', padding: '14px', margin: '8px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', outline: 'none' };
-const btnStyle = { flex: 1, padding: '14px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '12px', color: '#010206', fontWeight: 'bold', cursor: 'pointer' };
-const loginStyleContainer = { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#020617' };
-const loginBoxStyle = { textAlign: 'center', width: '380px', padding: '50px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.1)' };
+const inputStyle = { width: '100%', padding: '15px', margin: '10px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white' };
+const btnStyle = { padding: '15px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '12px', color: '#000', fontWeight: 'bold', cursor: 'pointer', flex: 1 };
+const activeStyle = { padding: '15px', background: 'rgba(34,211,238,0.1)', border: '1px solid #22d3ee', borderRadius: '12px', color: '#22d3ee', cursor: 'pointer', textAlign: 'left' };
+const inactiveStyle = { padding: '15px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', textAlign: 'left' };
