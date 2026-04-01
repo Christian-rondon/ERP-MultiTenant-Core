@@ -6,7 +6,7 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
-// ENLACE DIRECTO DE TU LOGO NEXO
+// ENLACE DIRECTO CORREGIDO PARA NEXO
 const NEXO_LOGO_URL = 'https://i.ibb.co/Lz0D7mY/Whats-App-Image-2026-04-01-at-11-10-21-AM.jpg';
 
 export default function App() {
@@ -39,16 +39,8 @@ export default function App() {
           </div>
           <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Salir</button>
         </header>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '30px' }}>
-          <div style={cardStyle}>
-            <div style={labelStyle}>Ventas Totales</div>
-            <div style={valueStyle}>$ 0.00</div>
-          </div>
-          <div style={{ ...cardStyle, border: '1px solid rgba(34, 211, 238, 0.2)' }}>
-            <div style={{ ...labelStyle, color: '#22d3ee' }}>Tasa BCV</div>
-            <div style={{ ...valueStyle, color: '#22d3ee' }}>Bs. 36.45</div>
-          </div>
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+          <h1 style={{ color: '#22d3ee' }}>Sistema Nexo Activo</h1>
         </div>
       </div>
     );
@@ -70,14 +62,10 @@ export default function App() {
           <input type="password" placeholder="Contraseña" onChange={e => setPass(e.target.value)} style={inputStyle} />
           <button type="submit" style={btnStyle}>Entrar al Sistema</button>
         </form>
-        <p style={{ marginTop: '40px', color: '#334155', fontSize: '10px', letterSpacing: '1px' }}>© 2026 NEXO GROUP · GESTOR INTELIGENTE</p>
       </div>
     </div>
   );
 }
 
-const cardStyle = { background: 'rgba(255, 255, 255, 0.03)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' };
-const labelStyle = { color: '#94a3b8', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' };
-const valueStyle = { fontSize: '42px', fontWeight: '800', marginTop: '10px' };
-const inputStyle = { width: '100%', padding: '16px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: 'white', outline: 'none', fontSize: '16px' };
-const btnStyle = { width: '100%', padding: '16px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '16px', color: '#020617', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(34,211,238,0.3)' };
+const inputStyle = { width: '100%', padding: '16px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: 'white', outline: 'none' };
+const btnStyle = { width: '100%', padding: '16px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '16px', color: '#020617', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' };
