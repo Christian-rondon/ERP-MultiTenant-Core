@@ -6,6 +6,9 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
+// ENLACE DIRECTO DE TU LOGO NEXO
+const NEXO_LOGO_URL = 'https://i.ibb.co/Lz0D7mY/Whats-App-Image-2026-04-01-at-11-10-21-AM.jpg';
+
 export default function App() {
   const [view, setView] = useState('loading');
   const [email, setEmail] = useState('');
@@ -29,13 +32,23 @@ export default function App() {
   if (view === 'dashboard') {
     return (
       <div style={{ minHeight: '100vh', background: '#020617', color: 'white', padding: '20px', fontFamily: 'sans-serif' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', padding: '20px', background: 'rgba(255,255,255,0.05)', borderRadius: '20px' }}>
-          <h2 style={{ margin: 0, letterSpacing: '2px' }}>NEXO VENEZUELA</h2>
-          <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '10px', cursor: 'pointer' }}>Salir</button>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 25px', background: 'rgba(255,255,255,0.03)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <img src={NEXO_LOGO_URL} alt="Nexo" style={{ height: '40px', borderRadius: '50%' }} />
+            <span style={{ fontWeight: 'bold', letterSpacing: '2px' }}>NEXO VENEZUELA</span>
+          </div>
+          <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Salir</button>
         </header>
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-          <h1 style={{ fontSize: '40px', color: '#22d3ee' }}>Bienvenido, Socio</h1>
-          <p style={{ color: '#94a3b8' }}>Sistema NEXO GESTOR inteligente activado.</p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '30px' }}>
+          <div style={cardStyle}>
+            <div style={labelStyle}>Ventas Totales</div>
+            <div style={valueStyle}>$ 0.00</div>
+          </div>
+          <div style={{ ...cardStyle, border: '1px solid rgba(34, 211, 238, 0.2)' }}>
+            <div style={{ ...labelStyle, color: '#22d3ee' }}>Tasa BCV</div>
+            <div style={{ ...valueStyle, color: '#22d3ee' }}>Bs. 36.45</div>
+          </div>
         </div>
       </div>
     );
@@ -44,27 +57,27 @@ export default function App() {
   return (
     <div style={{ 
       display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', 
-      background: 'linear-gradient(rgba(2,6,23,0.8), rgba(2,6,23,0.8)), url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2001") center/cover' 
+      background: 'linear-gradient(rgba(2,6,23,0.85), rgba(2,6,23,0.95)), url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2001") center/cover' 
     }}>
-      <div style={{ textAlign: 'center', width: '100%', maxWidth: '400px', padding: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', backdropFilter: 'blur(15px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ marginBottom: '20px' }}>
-          <svg width="80" height="80" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="#22d3ee" strokeWidth="2" />
-            <path d="M30 70V30H40L60 60V30H70V70H60L40 40V70H30Z" fill="#22d3ee" />
-            <path d="M65 25L75 25L75 35M75 25L55 45" stroke="#22d3ee" strokeWidth="3" fill="none" />
-          </svg>
+      <div style={{ textAlign: 'center', width: '100%', maxWidth: '400px', padding: '50px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+        <div style={{ width: '120px', height: '120px', margin: '0 auto 25px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #22d3ee', boxShadow: '0 0 30px rgba(34, 211, 238, 0.3)' }}>
+          <img src={NEXO_LOGO_URL} alt="Nexo Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <h1 style={{ color: 'white', letterSpacing: '5px', margin: '10px 0' }}>NEXO</h1>
-        <p style={{ color: '#94a3b8', fontSize: '12px', letterSpacing: '3px', marginBottom: '30px' }}>VENEZUELA</p>
+        <h1 style={{ color: 'white', letterSpacing: '6px', margin: '0', fontSize: '36px', fontWeight: '900' }}>NEXO</h1>
+        <p style={{ color: '#64748b', fontSize: '13px', letterSpacing: '4px', marginBottom: '40px', textTransform: 'uppercase' }}>Venezuela</p>
         <form onSubmit={handleLogin}>
-          <input type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} style={inputStyle} />
+          <input type="email" placeholder="Usuario Nexo" onChange={e => setEmail(e.target.value)} style={inputStyle} />
           <input type="password" placeholder="Contraseña" onChange={e => setPass(e.target.value)} style={inputStyle} />
-          <button type="submit" style={btnStyle}>Entrar al Sistema Nexo</button>
+          <button type="submit" style={btnStyle}>Entrar al Sistema</button>
         </form>
+        <p style={{ marginTop: '40px', color: '#334155', fontSize: '10px', letterSpacing: '1px' }}>© 2026 NEXO GROUP · GESTOR INTELIGENTE</p>
       </div>
     </div>
   );
 }
 
-const inputStyle = { width: '100%', padding: '15px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '15px', color: 'white', outline: 'none' };
-const btnStyle = { width: '100%', padding: '15px', background: 'linear-gradient(to right, #2563eb, #22d3ee)', border: 'none', borderRadius: '15px', color: 'white', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 10px 20px rgba(34,211,238,0.3)' };
+const cardStyle = { background: 'rgba(255, 255, 255, 0.03)', padding: '30px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' };
+const labelStyle = { color: '#94a3b8', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' };
+const valueStyle = { fontSize: '42px', fontWeight: '800', marginTop: '10px' };
+const inputStyle = { width: '100%', padding: '16px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: 'white', outline: 'none', fontSize: '16px' };
+const btnStyle = { width: '100%', padding: '16px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '16px', color: '#020617', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(34,211,238,0.3)' };
