@@ -6,7 +6,7 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
-// ENLACE DIRECTO (SÍ funciona en código)
+// LOGO NEXO RESPALDADO (SÍ FUNCIONA SIEMPRE)
 const NEXO_LOGO_URL = 'https://i.ibb.co/Lz0D7mY/Whats-App-Image-2026-04-01-at-11-10-21-AM.jpg';
 
 export default function App() {
@@ -49,10 +49,15 @@ export default function App() {
       background: 'linear-gradient(rgba(2,6,23,0.9), rgba(2,6,23,0.95)), url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2001") center/cover' 
     }}>
       <div style={{ textAlign: 'center', width: '100%', maxWidth: '380px', padding: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ width: '120px', height: '120px', margin: '0 auto 20px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #22d3ee' }}>
-          <img src={NEXO_LOGO_URL} alt="Nexo Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ width: '120px', height: '120px', margin: '0 auto 20px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #22d3ee', boxShadow: '0 0 20px rgba(34,211,238,0.3)' }}>
+          <img 
+            src={NEXO_LOGO_URL} 
+            alt="Nexo Logo" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e: any) => { e.target.src = 'https://via.placeholder.com/150?text=N'; }}
+          />
         </div>
-        <h1 style={{ color: 'white', letterSpacing: '5px', margin: '0', fontSize: '32px' }}>NEXO</h1>
+        <h1 style={{ color: 'white', letterSpacing: '5px', margin: '0', fontSize: '32px', fontWeight: 'bold' }}>NEXO</h1>
         <p style={{ color: '#64748b', fontSize: '12px', letterSpacing: '3px', marginBottom: '30px' }}>VENEZUELA</p>
         <form onSubmit={handleLogin}>
           <input type="email" placeholder="Usuario" onChange={e => setEmail(e.target.value)} style={inputStyle} />
