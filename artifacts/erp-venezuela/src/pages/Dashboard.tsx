@@ -1,165 +1,42 @@
-import React from "react";
-import { useSalesSummary } from "@/hooks/use-sales";
-import { useProducts } from "@/hooks/use-products";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrencyUsd, formatCurrencyBs } from "@/lib/utils";
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-} from "recharts";
-import { DollarSign, AlertTriangle, TrendingUp, ShoppingBag } from "lucide-react";
-
-function getLast15Days(): string[] {
-  const days: string[] = [];
-  for (let i = 14; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().split("T")[0]);
-  }
-  return days;
-}
-
-function fill15DayGaps(
-  raw: { date: string; totalUsd: number; totalBs: number }[]
-): { date: string; totalUsd: number; totalBs: number }[] {
-  const map: Record<string, { totalUsd: number; totalBs: number }> = {};
-  for (const d of raw) map[d.date] = { totalUsd: d.totalUsd, totalBs: d.totalBs };
-  return getLast15Days().map(date => ({
-    date: date.slice(5),
-    totalUsd: map[date]?.totalUsd || 0,
-    totalBs: map[date]?.totalBs || 0,
-  }));
-}
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
-  const from15 = getLast15Days()[0];
-  const { data: summary, isLoading: isLoadingSummary } = useSalesSummary(from15);
-  const { data: products } = useProducts();
+  const [user, setUser] = useState<any>(null);
 
-  const criticalStock = products?.filter(p => p.stock <= p.minStock) || [];
-  const chartData = summary ? fill15DayGaps(summary.dailySales) : [];
-
-  if (isLoadingSummary || !summary) {
-    return <div className="text-center p-12 text-muted-foreground">Cargando dashboard...</div>;
-  }
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUser(data.user);
+      else window.location.href = '/';
+    });
+  }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', padding: '20px', fontFamily: 'sans-serif' }}>
+      <nav style={{ backgroundColor: '#0f172a', color: 'white', padding: '15px 25px', borderRadius: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <h1 style={{ margin: 0, fontSize: '20px' }}>Construcciones Express</h1>
+        <span>{user?.email}</span>
+      </nav>
       
-      {/* Alert Banner */}
-      {criticalStock.length > 0 && (
-        <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-center gap-4 text-destructive shadow-lg shadow-destructive/5">
-          <AlertTriangle className="w-8 h-8 flex-shrink-0" />
-          <div>
-            <h4 className="font-bold text-lg">Alerta de Inventario Crítico</h4>
-            <p className="text-sm opacity-90">Hay {criticalStock.length} productos por debajo del stock mínimo. Revise el inventario.</p>
-          </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#64748b', marginTop: 0 }}>Ventas del Día</h3>
+          <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e293b', margin: '10px 0' }}>$ 0.00</p>
+          <span style={{ color: '#10b981', fontWeight: '500' }}>+ 0% vs ayer</span>
         </div>
-      )}
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-card to-card/50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Ventas (15 días USD)</p>
-              <div className="p-2 bg-primary/10 rounded-lg text-primary"><DollarSign className="w-5 h-5" /></div>
-            </div>
-            <h3 className="text-3xl font-bold font-display">{formatCurrencyUsd(summary.totalSalesUsd)}</h3>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-card to-card/50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Ventas (15 días Bs)</p>
-              <div className="p-2 bg-accent/10 rounded-lg text-accent"><DollarSign className="w-5 h-5" /></div>
-            </div>
-            <h3 className="text-3xl font-bold font-display">{formatCurrencyBs(summary.totalSalesBs).replace('VES', 'Bs')}</h3>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-card to-card/50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Utilidad Neta (15d)</p>
-              <div className="p-2 bg-success/10 rounded-lg text-success"><TrendingUp className="w-5 h-5" /></div>
-            </div>
-            <h3 className="text-3xl font-bold font-display text-success">{formatCurrencyUsd(summary.netProfitUsd)}</h3>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-card to-card/50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-muted-foreground">Cant. Ventas (15d)</p>
-              <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><ShoppingBag className="w-5 h-5" /></div>
-            </div>
-            <h3 className="text-3xl font-bold font-display">{summary.salesCount}</h3>
-          </CardContent>
-        </Card>
+        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#64748b', marginTop: 0 }}>Tasa BCV</h3>
+          <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e293b', margin: '10px 0' }}>Bs. 36.40</p>
+          <span style={{ color: '#64748b' }}>Actualizado hoy</span>
+        </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* 15-Day Sales Chart */}
-        <Card className="col-span-1 lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Ventas Últimos 15 Días (USD)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorUsd" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
-                  <RechartsTooltip 
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }}
-                    itemStyle={{ color: 'hsl(var(--primary))' }}
-                    formatter={(value: number) => [formatCurrencyUsd(value), "Ventas"]}
-                  />
-                  <Area type="monotone" dataKey="totalUsd" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorUsd)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Products */}
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Top 5 Productos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {summary.topProducts.slice(0, 5).map((product, idx) => (
-                <div key={product.productId} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center font-bold text-sm text-muted-foreground border border-border">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm line-clamp-1">{product.productName}</p>
-                      <p className="text-xs text-muted-foreground">{product.totalQuantity} vendidos</p>
-                    </div>
-                  </div>
-                  <div className="font-semibold font-display text-primary">
-                    {formatCurrencyUsd(product.totalRevenue)}
-                  </div>
-                </div>
-              ))}
-              {summary.topProducts.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">No hay ventas registradas</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      
+      <button 
+        onClick={() => supabase.auth.signOut().then(() => window.location.href = '/')}
+        style={{ marginTop: '40px', padding: '12px 25px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}
+      >
+        Cerrar Sesión
+      </button>
     </div>
   );
 }
