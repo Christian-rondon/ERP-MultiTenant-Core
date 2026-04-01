@@ -6,69 +6,25 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
-// ESTILOS DE LOGO NEXO (Inspirados en la imagen proporcionada)
-const NexoLogo = ({ size = 'medium' }) => {
-  const containerSize = size === 'large' ? '120px' : '60px';
-  const logoSize = size === 'large' ? '80px' : '40px';
-  const fontSize = size === 'large' ? '36px' : '20px';
-  const subFontSize = size === 'large' ? '14px' : '10px';
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      {/* Contenedor Circular Premium (Inspirado en el badge de la imagen) */}
-      <div style={{
-        width: containerSize,
-        height: containerSize,
-        borderRadius: '50%',
-        background: 'linear-gradient(135deg, #020617 0%, #0a1122 100%)', // Fondo muy oscuro
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '4px solid rgba(255, 255, 255, 0.05)',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-        marginBottom: '15px',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        {/* 'N' estilizada con flecha (SVG para alta precisión) */}
-        <svg width={logoSize} height={logoSize} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="logoGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e3a8a" /> {/* Azul profundo */}
-              <stop offset="100%" stopColor="#22d3ee" /> {/* Cian brillante */}
-            </linearGradient>
-          </defs>
-          <path d="M15 85V15H35L65 70V15H85V85H65L35 30V85H15Z" fill="url(#logoGradient)"/>
-          {/* Flecha hacia arriba y derecha */}
-          <path d="M70 10H90V30H80V18L60 38L53 31L73 11H70Z" fill="#22d3ee"/>
-        </svg>
-      </div>
-
-      {/* Texto de la Marca (NEXO) */}
-      <div style={{ textAlign: 'center' }}>
-        <h2 style={{
-          color: 'white',
-          margin: 0,
-          fontSize: fontSize,
-          fontWeight: '900',
-          letterSpacing: '2px',
-          fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-        }}>
-          NEXO
-        </h2>
-        <p style={{
-          color: '#94a3b8',
-          margin: '5px 0 0 0',
-          fontSize: subFontSize,
-          letterSpacing: '1px',
-          opacity: 0.8
-        }}>
-          GESTOR INTELIGENTE VENEZUELA
-        </p>
-      </div>
-    </div>
-  );
-};
+// LOGO NEXO EXACTO (SVG)
+const NexoLogo = () => (
+  <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 20px' }}>
+    <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))' }}>
+      {/* Anillo Metálico */}
+      <circle cx="50" cy="50" r="48" fill="#1e293b" stroke="#94a3b8" strokeWidth="2" />
+      <circle cx="50" cy="50" r="44" fill="#020617" stroke="#475569" strokeWidth="1" />
+      {/* N Estilizada con Gradiente Nexo */}
+      <defs>
+        <linearGradient id="nexoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#2563eb" />
+          <stop offset="100%" stopColor="#22d3ee" />
+        </linearGradient>
+      </defs>
+      <path d="M30 75V25H42L58 58V25H70V75H58L42 42V75H30Z" fill="url(#nexoGrad)" />
+      <path d="M65 22H78V35H73V28L58 43L54 39L69 24H65V22Z" fill="#22d3ee" />
+    </svg>
+  </div>
+);
 
 export default function App() {
   const [view, setView] = useState('loading');
@@ -92,144 +48,68 @@ export default function App() {
 
   if (view === 'dashboard') {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
-        fontFamily: 'system-ui, sans-serif',
-        color: '#f8fafc',
-        padding: '20px'
-      }}>
-        {/* Header Superior con Logo NEXO */}
-        <header style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(10px)',
-          padding: '15px 25px',
-          borderRadius: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          marginBottom: '30px',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <NexoLogo size="small" />
-          </div>
-          <button
-            onClick={() => supabase.auth.signOut().then(() => setView('login'))}
-            style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
-          >
-            Cerrar Sesión
-          </button>
+      <div style={{ minHeight: '100vh', background: '#020617', color: 'white', fontFamily: 'sans-serif', padding: '20px' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '15px' }}>
+           <h2 style={{ margin: 0, fontSize: '18px', letterSpacing: '2px' }}>NEXO VENEZUELA</h2>
+           <button onClick={() => supabase.auth.signOut().then(() => setView('login'))} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', padding: '5px 15px' }}>Salir</button>
         </header>
-
-        {/* Grid de KPIs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          {/* Tarjeta Ventas */}
-          <div style={cardStyle}>
-            <div style={cardTitleStyle}>Ventas Totales Nexo</div>
-            <div style={cardValueStyle}>$ 0.00</div>
-            <div style={{ color: '#10b981', fontSize: '14px', marginTop: '10px' }}>↑ 0% vs mes anterior</div>
-          </div>
-
-          {/* Tarjeta Tasa BCV */}
-          <div style={{ ...cardStyle, background: 'rgba(34, 211, 238, 0.05)', border: '1px solid rgba(34, 211, 238, 0.1)' }}>
-            <div style={{ ...cardTitleStyle, color: '#22d3ee' }}>Tasa Oficial BCV</div>
-            <div style={{ ...cardValueStyle, color: '#22d3ee' }}>Bs. 36.45</div>
-            <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '10px' }}>Sincronizado hoy</div>
-          </div>
-        </div>
-
-        {/* Sección de Acciones Rápidas */}
-        <div style={{ marginTop: '40px' }}>
-          <h3 style={{ marginBottom: '20px', fontSize: '18px' }}>Módulos Activos</h3>
-          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-            <button style={btnStyle}>📦 Inventario</button>
-            <button style={btnStyle}>🧾 Nueva Venta</button>
-            <button style={btnStyle}>👥 Clientes</button>
-            <button style={btnStyle}>📊 Reportes</button>
-          </div>
+        <div style={{ marginTop: '40px', textAlign: 'center' }}>
+          <h1 style={{ color: '#22d3ee' }}>Bienvenido al Gestor Inteligente</h1>
+          <p style={{ color: '#94a3b8' }}>Panel de Control Activo</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#020617' }}>
-      <form onSubmit={handleLogin} style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        padding: '50px',
-        borderRadius: '32px',
-        width: '100%',
-        maxWidth: '400px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(20px)'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <NexoLogo size="large" />
-        </div>
-        <input type="email" placeholder="Email (Nexo)" onChange={e => setEmail(e.target.value)} style={inputStyle} />
-        <input type="password" placeholder="Contraseña" onChange={e => setPass(e.target.value)} style={inputStyle} />
-        <button type="submit" style={{
-          width: '100%',
-          padding: '16px',
-          backgroundColor: '#22d3ee', // Color cian de Nexo
-          color: '#020617', // Texto oscuro para contraste
-          border: 'none',
-          borderRadius: '16px',
-          fontWeight: 'bold',
-          fontSize: '16px',
-          cursor: 'pointer',
-          boxShadow: '0 10px 15px -3px rgba(34, 211, 238, 0.3)'
-        }}>Entrar al Sistema Nexo</button>
-      </form>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh', 
+      background: 'linear-gradient(rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.9)), url("https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2047&auto=format&fit=crop") center/cover'
+    }}>
+      <div style={{ textAlign: 'center', width: '100%', maxWidth: '380px', padding: '20px' }}>
+        <NexoLogo />
+        <h1 style={{ color: 'white', fontSize: '32px', margin: '0', fontWeight: 'bold', letterSpacing: '4px' }}>NEXO</h1>
+        <p style={{ color: '#94a3b8', fontSize: '14px', letterSpacing: '2px', marginBottom: '30px' }}>VENEZUELA</p>
+        
+        <form onSubmit={handleLogin}>
+          <div style={{ position: 'relative', marginBottom: '15px' }}>
+            <input type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} style={inputStyle} />
+          </div>
+          <div style={{ position: 'relative', marginBottom: '30px' }}>
+            <input type="password" placeholder="Contraseña" onChange={e => setPass(e.target.value)} style={inputStyle} />
+          </div>
+          <button type="submit" style={btnStyle}>Entrar al Sistema Nexo</button>
+        </form>
+        <p style={{ marginTop: '30px', color: '#475569', fontSize: '10px' }}>© 2026 Nexo Group · GESTOR INTELIGENTE VENEZUELA</p>
+      </div>
     </div>
   );
 }
 
 const inputStyle = {
   width: '100%',
-  padding: '16px',
-  marginBottom: '15px',
-  borderRadius: '16px',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
-  background: 'rgba(255, 255, 255, 0.05)',
+  padding: '16px 16px 16px 45px',
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: '12px',
   color: 'white',
+  fontSize: '16px',
   outline: 'none',
-  fontSize: '16px'
+  backdropFilter: 'blur(5px)'
 };
 
 const btnStyle = {
-  padding: '15px 25px',
-  borderRadius: '16px',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
-  background: 'rgba(255, 255, 255, 0.05)',
+  width: '100%',
+  padding: '16px',
+  background: 'linear-gradient(90deg, #2563eb, #22d3ee)',
   color: 'white',
+  border: 'none',
+  borderRadius: '30px',
+  fontWeight: 'bold',
+  fontSize: '16px',
   cursor: 'pointer',
-  fontWeight: '600',
-  transition: 'all 0.3s'
-};
-
-const cardStyle = {
-  background: 'rgba(255, 255, 255, 0.03)',
-  padding: '30px',
-  borderRadius: '24px',
-  border: '1px solid rgba(255, 255, 255, 0.05)',
-  position: 'relative',
-  overflow: 'hidden'
-};
-
-const cardTitleStyle = {
-  color: '#94a3b8',
-  fontSize: '12px',
-  textTransform: 'uppercase',
-  letterSpacing: '1px',
-  fontWeight: 'bold'
-};
-
-const cardValueStyle = {
-  fontSize: '42px',
-  fontWeight: '800',
-  marginTop: '10px',
-  color: '#fff'
+  boxShadow: '0 0 20px rgba(34, 211, 238, 0.4)'
 };
