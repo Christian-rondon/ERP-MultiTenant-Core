@@ -8,83 +8,91 @@ export default function App() {
   const [tab, setTab] = useState('comercios');
   const [showModal, setShowModal] = useState(false);
 
+  // VISTA DE LOGIN
   if (view === 'login') {
     return (
       <div style={loginContainerStyle}>
         <div style={loginBoxStyle}>
           <div style={logoCircleStyle}><img src={NEXO_LOGO_DATA} style={logoImgStyle} /></div>
-          <h1 style={{ color: 'white', letterSpacing: '6px', fontWeight: '900' }}>NEXO</h1>
+          <h1 style={{ color: 'white', letterSpacing: '6px', fontWeight: '900', marginBottom: '40px' }}>NEXO</h1>
           <form onSubmit={(e) => { e.preventDefault(); setView('dashboard'); }}>
             <input type="email" placeholder="Usuario" style={inputStyle} required />
             <input type="password" placeholder="Contraseña" style={inputStyle} required />
-            <button type="submit" style={btnStyle}>ENTRAR</button>
+            <button type="submit" style={btnStyle}>ENTRAR AL SISTEMA</button>
           </form>
         </div>
       </div>
     );
   }
 
+  // VISTA DEL DASHBOARD REAL (Adiós al aviso de construcción)
   return (
     <div style={{ minHeight: '100vh', background: '#010206', color: 'white', fontFamily: 'sans-serif', display: 'flex' }}>
       
-      {/* SIDEBAR VIBRANTE */}
+      {/* SIDEBAR */}
       <aside style={sidebarStyle}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <img src={NEXO_LOGO_DATA} style={{ width: '60px', borderRadius: '50%', border: '2px solid #22d3ee' }} />
-          <p style={{ fontSize: '12px', letterSpacing: '2px', marginTop: '10px', color: '#22d3ee' }}>S. ADMIN</p>
+          <p style={{ fontSize: '10px', letterSpacing: '2px', marginTop: '10px', color: '#22d3ee', fontWeight: 'bold' }}>SUPER ADMIN</p>
         </div>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button onClick={() => setTab('comercios')} style={tab === 'comercios' ? activeTab : inactiveTab}>🏢 Comercios</button>
           <button onClick={() => setTab('ventas')} style={tab === 'ventas' ? activeTab : inactiveTab}>🛒 Punto de Venta</button>
-          <button onClick={() => setTab('config')} style={tab === 'config' ? activeTab : inactiveTab}>⚙️ Config</button>
-          <button onClick={() => setView('login')} style={{ ...inactiveTab, color: '#ef4444', marginTop: '50px' }}>🚪 Salir</button>
+          <button onClick={() => setTab('config')} style={tab === 'config' ? activeTab : inactiveTab}>⚙️ Configuración</button>
+          <button onClick={() => setView('login')} style={{ ...inactiveTab, color: '#ef4444', marginTop: '40px' }}>🚪 Salir</button>
         </nav>
       </aside>
 
-      {/* CONTENIDO PRINCIPAL */}
-      <main style={{ flex: 1, padding: '40px', position: 'relative' }}>
+      {/* ÁREA DE CONTENIDO */}
+      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         
         {tab === 'comercios' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-              <h1 style={{ color: '#22d3ee', margin: 0 }}>Gestión de Comercios</h1>
-              <button onClick={() => setShowModal(true)} style={btnActionStyle}>+ NUEVO COMERCIO</button>
+              <div>
+                <h1 style={{ color: '#22d3ee', margin: 0, fontSize: '32px' }}>Gestión de Comercios</h1>
+                <p style={{ color: '#64748b', margin: '5px 0 0 0' }}>Administra los locales vinculados a la red Nexo</p>
+              </div>
+              <button onClick={() => setShowModal(true)} style={btnActionStyle}>+ REGISTRAR COMERCIO</button>
             </div>
             
-            {/* TARJETAS DE MÉTRICAS (Inspirado en tus fotos) */}
+            {/* KPI CARDS (Inspirado en tus fotos) */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
               <div style={metricCardStyle}>
-                <span style={{color: '#94a3b8', fontSize: '12px'}}>INGRESOS HOY</span>
-                <h2 style={{color: '#10b981', margin: '5px 0'}}>$0.00</h2>
+                <p style={{color: '#94a3b8', fontSize: '12px', margin: 0}}>INGRESOS HOY (USD)</p>
+                <h2 style={{color: '#3b82f6', fontSize: '28px', margin: '10px 0'}}>$4.50</h2>
+                <span style={{color: '#10b981', fontSize: '14px'}}>Bs.S 2.025,00</span>
               </div>
               <div style={metricCardStyle}>
-                <span style={{color: '#94a3b8', fontSize: '12px'}}>VENTAS TOTALES</span>
-                <h2 style={{color: '#3b82f6', margin: '5px 0'}}>0</h2>
+                <p style={{color: '#94a3b8', fontSize: '12px', margin: 0}}>TRANSACCIONES</p>
+                <h2 style={{color: '#white', fontSize: '28px', margin: '10px 0'}}>12</h2>
+                <span style={{color: '#3b82f6', fontSize: '14px'}}>+3 hoy</span>
               </div>
             </div>
             
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '40px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-              <p style={{ color: '#64748b' }}>No hay comercios registrados. Usa el botón azul para empezar.</p>
+            <div style={tablePlaceholderStyle}>
+              <p style={{ color: '#64748b' }}>No hay comercios registrados aún. Comienza agregando tu primera sucursal.</p>
             </div>
           </div>
         )}
 
         {tab === 'ventas' && <SalesModule />}
 
-        {/* MODAL DE REGISTRO (Z-INDEX MÁXIMO) */}
+        {/* MODAL INTEGRADO */}
         {showModal && (
           <div style={modalOverlay}>
             <div style={modalContent}>
-              <h2 style={{ color: '#22d3ee', marginBottom: '20px' }}>Registrar Comercio</h2>
-              <input type="text" placeholder="Nombre del Negocio" style={inputStyle} />
-              <input type="text" placeholder="RIF (Ej: J-12345678)" style={inputStyle} />
+              <h2 style={{ color: '#22d3ee', marginBottom: '25px', textAlign: 'center' }}>Nuevo Registro</h2>
+              <input type="text" placeholder="Nombre Comercial" style={inputStyle} />
+              <input type="text" placeholder="RIF (J-00000000-0)" style={inputStyle} />
               <select style={inputStyle}>
-                <option>Panadería</option>
+                <option>Panadería / Pastelería</option>
                 <option>Farmacia</option>
-                <option>Repuestos</option>
+                <option>Venta de Repuestos</option>
+                <option>Bodegón / Supermercado</option>
               </select>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button onClick={() => {alert('Comercio Guardado'); setShowModal(false);}} style={btnStyle}>GUARDAR</button>
+              <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
+                <button onClick={() => {alert('Guardado en Nexo Cloud'); setShowModal(false);}} style={btnStyle}>GUARDAR</button>
                 <button onClick={() => setShowModal(false)} style={{ ...btnStyle, background: '#334155' }}>CANCELAR</button>
               </div>
             </div>
@@ -95,17 +103,18 @@ export default function App() {
   );
 }
 
-// ESTILOS
-const loginContainerStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'radial-gradient(circle at top, #0f172a 0%, #020617 100%)', padding: '20px' };
-const loginBoxStyle = { textAlign: 'center', width: '100%', maxWidth: '380px', padding: '50px 30px', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' };
-const logoCircleStyle = { width: '110px', height: '110px', margin: '0 auto 20px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #22d3ee', boxShadow: '0 0 30px rgba(34, 211, 238, 0.4)' };
+// ESTILOS REFINADOS
+const loginContainerStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#020617' };
+const loginBoxStyle = { textAlign: 'center', width: '100%', maxWidth: '380px', padding: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)' };
+const logoCircleStyle = { width: '100px', height: '100px', margin: '0 auto 20px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #22d3ee', boxShadow: '0 0 20px rgba(34, 211, 238, 0.3)' };
 const logoImgStyle = { width: '100%', height: '100%', objectFit: 'cover' };
-const sidebarStyle = { width: '260px', height: '100vh', background: '#0f172a', padding: '40px 20px', borderRight: '1px solid rgba(34,211,238,0.1)' };
-const activeTab = { width: '100%', padding: '15px', background: 'rgba(34,211,238,0.1)', border: '1px solid #22d3ee', borderRadius: '12px', color: '#22d3ee', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left' };
-const inactiveTab = { width: '100%', padding: '15px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', textAlign: 'left' };
-const metricCardStyle = { flex: 1, background: '#0f172a', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' };
-const btnActionStyle = { padding: '15px 25px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', color: '#010206' };
-const modalOverlay = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 };
-const modalContent = { background: '#0f172a', padding: '40px', borderRadius: '28px', border: '2px solid #22d3ee', width: '90%', maxWidth: '400px' };
-const inputStyle = { width: '100%', padding: '16px', margin: '10px 0', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: 'white', boxSizing: 'border-box' };
-const btnStyle = { flex: 1, padding: '16px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '16px', color: '#010206', fontWeight: 'bold', cursor: 'pointer' };
+const inputStyle = { width: '100%', padding: '16px', margin: '10px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', color: 'white', boxSizing: 'border-box', outline: 'none' };
+const btnStyle = { flex: 1, padding: '16px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '14px', color: '#010206', fontWeight: 'bold', cursor: 'pointer' };
+const sidebarStyle = { width: '260px', height: '100vh', background: '#0f172a', padding: '30px 15px', borderRight: '1px solid rgba(34,211,238,0.1)' };
+const activeTab = { width: '100%', padding: '14px', background: 'rgba(34,211,238,0.1)', border: '1px solid #22d3ee', borderRadius: '12px', color: '#22d3ee', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left', marginBottom: '5px' };
+const inactiveTab = { width: '100%', padding: '14px', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', textAlign: 'left', marginBottom: '5px' };
+const metricCardStyle = { flex: 1, background: '#0f172a', padding: '25px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' };
+const btnActionStyle = { padding: '14px 28px', background: 'linear-gradient(90deg, #2563eb, #22d3ee)', border: 'none', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', color: '#010206', boxShadow: '0 10px 20px rgba(34,211,238,0.2)' };
+const tablePlaceholderStyle = { background: 'rgba(255,255,255,0.02)', padding: '60px', borderRadius: '30px', border: '1px dashed rgba(255,255,255,0.1)', textAlign: 'center' };
+const modalOverlay = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000 };
+const modalContent = { background: '#111827', padding: '40px', borderRadius: '32px', border: '1px solid #22d3ee', width: '90%', maxWidth: '420px', boxShadow: '0 0 50px rgba(34,211,238,0.2)' };
