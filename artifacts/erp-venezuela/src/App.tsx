@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 
 export default function App() {
   const [view, setView] = useState('login');
-  const [activeTab, setActiveTab] = useState('Punto de Venta');
-  const [cart, setCart] = useState([]);
-  const [tasa] = useState(45.50); // Tasa BCV definida
+  const [activeTab, setActiveTab] = useState('Reportes');
+  const [tasa] = useState(45.50);
 
-  // Función para cambiar de vista desde el Sidebar
   const renderContent = () => {
     switch(activeTab) {
-      case 'Punto de Venta': return <POSView tasa={tasa} cart={cart} setCart={setCart} />;
-      case 'Dashboard': return <Dashboard tasa={tasa} />;
-      default: return <div style={placeholderS}>Panel en Construcción</div>;
+      case 'Reportes': return <ReportsView tasa={tasa} />;
+      case 'Punto de Venta': return <div style={placeholderS}>Vista POS Activa</div>;
+      case 'Dashboard': return <div style={placeholderS}>Vista Dashboard Activa</div>;
+      default: return <div style={placeholderS}>Sección en Desarrollo</div>;
     }
   };
 
@@ -48,101 +47,76 @@ export default function App() {
   );
 }
 
-// --- VISTA PUNTO DE VENTA (Basada en tu imagen) ---
-function POSView({ tasa, cart, setCart }) {
-  const totalUSD = cart.reduce((acc, item) => acc + item.price, 0);
-  const totalBS = totalUSD * tasa;
-
+// --- VISTA DE REPORTES Y ANÁLISIS ---
+function ReportsView({ tasa }) {
   return (
-    <div style={posGrid}>
-      {/* SECCIÓN IZQUIERDA: BÚSQUEDA */}
-      <div style={posMain}>
-        <div style={searchBarRow}>
-          <div style={searchContainer}>
-            <span style={iconS}>🔍</span>
-            <input placeholder="Buscar producto..." style={posInput} />
-          </div>
-          <div style={scannerBtn}>🔳 Código...</div>
+    <div style={reportsContainer}>
+      <header style={headerFlex}>
+        <div>
+          <h1 style={titleS}>Reportes y Análisis</h1>
+          <p style={subTitleS}>Métricas de rendimiento del negocio.</p>
         </div>
-        
-        <div style={productsArea}>
-          <p style={{color: '#475569', textAlign: 'center', marginTop: '100px'}}>Seleccione productos para comenzar la venta</p>
+        <div style={dateFilter}>
+          <input type="date" style={dateInput} defaultValue="2026-04-01" />
+          <span style={{color: '#64748b'}}> - </span>
+          <input type="date" style={dateInput} defaultValue="2026-04-01" />
+        </div>
+      </header>
+
+      {/* TARJETAS DE MÉTRICAS TOP */}
+      <div style={metricsGrid}>
+        <div style={metricCard}>
+          <p style={mLabel}>Ingresos Totales (USD)</p>
+          <h2 style={mValue}>USD 0,00</h2>
+          <p style={mSub}>~ Bs.S 0,00</p>
+        </div>
+        <div style={metricCard}>
+          <p style={mLabel}>Volumen de Ventas</p>
+          <h2 style={mValue}>0</h2>
+          <p style={mSub}>Transacciones completadas</p>
+        </div>
+        <div style={metricCard}>
+          <p style={mLabel}>Ticket Promedio (USD)</p>
+          <h2 style={mValue}>USD 0,00</h2>
+          <p style={mSub}>Por transacción</p>
         </div>
       </div>
 
-      {/* SECCIÓN DERECHA: CARRITO (Panel Lateral) */}
-      <div style={cartPanel}>
-        <h3 style={cartTitle}>🛒 Carrito ({cart.length})</h3>
-        <div style={cartItems}>
-          {cart.length === 0 ? (
-            <p style={emptyText}>Agrega productos al carrito</p>
-          ) : (
-            <p>Lista de items...</p>
-          )}
+      {/* GRÁFICOS INFERIORES */}
+      <div style={chartsGrid}>
+        <div style={chartBox}>
+          <h3 style={chartTitle}>Productos más vendidos</h3>
+          <div style={emptyChart}>Sin datos</div>
         </div>
-
-        <div style={cartFooter}>
-          <div style={totalRow}><span>Total USD</span><span style={valUSD}>USD {totalUSD.toFixed(2)}</span></div>
-          <div style={totalRow}><span>Total Bs</span><span style={valBS}>Bs.S {totalBS.toLocaleString('es-VE', {minimumFractionDigits: 2})}</span></div>
-          
-          <p style={methodLabel}>Método de Pago</p>
-          <div style={methodGrid}>
-            {['Efectivo USD', 'Efectivo Bs', 'Pago Móvil', 'Punto', 'Mixto'].map(m => (
-              <button key={m} style={m === 'Efectivo USD' ? mBtnActive : mBtn}>{m}</button>
-            ))}
-          </div>
-
-          <textarea placeholder="Notas (opcional)..." style={notesArea}></textarea>
-          
-          <button style={btnConfirm}>Confirmar Venta · USD {totalUSD.toFixed(2)}</button>
+        <div style={chartBox}>
+          <h3 style={chartTitle}>Distribución por Método de Pago</h3>
+          <div style={emptyChart}>Sin datos</div>
         </div>
       </div>
     </div>
   );
 }
 
-// --- DASHBOARD (De la imagen anterior) ---
-function Dashboard({ tasa }) {
-  return (
-    <div>
-      <h1 style={{fontSize: '24px', margin: '0 0 5px 0'}}>Dashboard</h1>
-      <p style={{color: '#64748b', fontSize: '14px', marginBottom: '30px'}}>miércoles, 1 de abril de 2026</p>
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px'}}>
-        <div style={{...statCard, background: '#2563eb'}}>Ingresos Hoy<br/><b>USD 0,00</b></div>
-        <div style={statCard}>Transacciones<br/><b>0</b></div>
-        <div style={statCard}>Tasa BCV<br/><b>{tasa}</b></div>
-        <div style={statCard}>Ingresos Bs<br/><b>0</b></div>
-      </div>
-    </div>
-  );
-}
+// ESTILOS DE REPORTES (image_11.png)
+const reportsContainer = { display: 'flex', flexDirection: 'column', gap: '30px' };
+const headerFlex = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+const titleS = { margin: 0, fontSize: '28px', fontWeight: 'bold' };
+const subTitleS = { margin: '5px 0 0 0', color: '#64748b', fontSize: '14px' };
+const dateFilter = { display: 'flex', alignItems: 'center', gap: '10px', background: '#0f172a', padding: '10px', borderRadius: '12px', border: '1px solid #1e293b' };
+const dateInput = { background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px' };
 
-// ESTILOS POS (RÉPLICA EXACTA)
-const posGrid = { display: 'grid', gridTemplateColumns: '1fr 350px', gap: '20px', height: '100%' };
-const posMain = { display: 'flex', flexDirection: 'column', gap: '20px' };
-const searchBarRow = { display: 'flex', gap: '15px' };
-const searchContainer = { flex: 1, position: 'relative', display: 'flex', alignItems: 'center' };
-const iconS = { position: 'absolute', left: '15px', color: '#64748b' };
-const posInput = { width: '100%', padding: '12px 12px 12px 45px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', color: 'white', outline: 'none' };
-const scannerBtn = { padding: '12px 20px', background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', color: '#94a3b8', cursor: 'pointer' };
-const productsArea = { flex: 1, background: 'rgba(15,23,42,0.3)', borderRadius: '15px', border: '1px dashed #1e293b' };
+const metricsGrid = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px' };
+const metricCard = { background: '#0f172a', padding: '25px', borderRadius: '20px', border: '1px solid #1e293b' };
+const mLabel = { margin: 0, fontSize: '13px', color: '#94a3b8', fontWeight: '500' };
+const mValue = { margin: '15px 0 5px 0', fontSize: '32px', fontWeight: 'bold', color: '#3b82f6' };
+const mSub = { margin: 0, fontSize: '13px', color: '#64748b' };
 
-const cartPanel = { background: '#0f172a', borderRadius: '20px', border: '1px solid #1e293b', display: 'flex', flexDirection: 'column', padding: '20px' };
-const cartTitle = { margin: '0 0 20px 0', fontSize: '18px' };
-const cartItems = { flex: 1, textAlign: 'center' };
-const emptyText = { color: '#475569', fontSize: '14px', marginTop: '40px' };
-const cartFooter = { borderTop: '1px solid #1e293b', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px' };
-const totalRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-const valUSD = { color: '#3b82f6', fontWeight: 'bold', fontSize: '18px' };
-const valBS = { fontWeight: 'bold', fontSize: '18px' };
-const methodLabel = { fontSize: '12px', color: '#64748b', marginTop: '10px' };
-const methodGrid = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' };
-const mBtn = { padding: '8px', background: '#1e293b', border: 'none', borderRadius: '8px', color: '#94a3b8', fontSize: '11px', cursor: 'pointer' };
-const mBtnActive = { padding: '8px', background: '#2563eb', border: 'none', borderRadius: '8px', color: 'white', fontSize: '11px', fontWeight: 'bold' };
-const notesArea = { background: '#010206', border: '1px solid #1e293b', borderRadius: '10px', color: 'white', padding: '10px', height: '60px', resize: 'none', fontSize: '13px' };
-const btnConfirm = { padding: '15px', background: '#1e40af', color: 'white', border: 'none', borderRadius: '15px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' };
+const chartsGrid = { display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '25px' };
+const chartBox = { background: '#0f172a', padding: '25px', borderRadius: '20px', border: '1px solid #1e293b', minHeight: '350px' };
+const chartTitle = { margin: '0 0 20px 0', fontSize: '18px', fontWeight: '600' };
+const emptyChart = { height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '14px', border: '1px dashed #1e293b', borderRadius: '15px' };
 
-// ESTILOS GLOBALES REUTILIZADOS
+// ESTILOS BASE (MANTENIENDO CONSISTENCIA)
 const dashLayout = { display: 'flex', height: '100vh', background: '#010206', color: 'white', fontFamily: 'sans-serif' };
 const sidebarS = { width: '260px', background: '#0a0f1e', padding: '20px', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column' };
 const sideHeader = { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px' };
@@ -153,13 +127,12 @@ const brandSub = { margin: 0, fontSize: '10px', color: '#64748b' };
 const navS = { display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 };
 const tActive = { padding: '12px 15px', background: '#1e293b', color: 'white', borderRadius: '10px', border: 'none', textAlign: 'left', cursor: 'pointer', fontWeight: '600' };
 const tInactive = { padding: '12px 15px', background: 'transparent', color: '#94a3b8', borderRadius: '10px', border: 'none', textAlign: 'left', cursor: 'pointer' };
-const mainS = { flex: 1, padding: '30px', overflowY: 'auto' };
+const mainS = { flex: 1, padding: '40px', overflowY: 'auto' };
 const btnLogout = { marginTop: 'auto', background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '10px' };
-const statCard = { background: '#1e293b', padding: '20px', borderRadius: '15px', border: '1px solid #334155' };
 const loginLayout = { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#050a18' };
 const loginCard = { background: '#0a0f1e', padding: '40px', borderRadius: '30px', textAlign: 'center', width: '350px', border: '1px solid #1e293b' };
 const logoCircle = { width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 20px', border: '2px solid #22d3ee', overflow: 'hidden' };
 const fullImg = { width: '100%', height: '100%', objectFit: 'cover' };
 const nexoTitle = { color: 'white', letterSpacing: '5px', marginBottom: '30px' };
 const btnEntrar = { width: '100%', padding: '15px', background: 'linear-gradient(90deg, #3b82f6, #22d3ee)', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' };
-const placeholderS = { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#475569', fontSize: '24px' };
+const placeholderS = { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#475569', fontSize: '20px' };
