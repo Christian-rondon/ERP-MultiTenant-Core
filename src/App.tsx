@@ -75,3 +75,32 @@ export default function App() {
     </div>
   );
 }
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+
+// Esto es lo que verás cuando logres entrar (la carretera nueva)
+const DashboardTemporal = () => (
+  <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+    <div className="text-center">
+      <h1 className="text-4xl font-black text-cyan-400">¡SISTEMA CORE ACTIVO! 🇻🇪</h1>
+      <p className="mt-4 text-slate-400">Bienvenido al ERP Nexo v2</p>
+    </div>
+  </div>
+);
+
+function App() {
+  return (
+    <Routes>
+      {/* Carretera 1: La entrada (Login) */}
+      <Route path="/" element={<Login />} />
+      
+      {/* Carretera 2: El destino (Dashboard) */}
+      <Route path="/dashboard" element={<DashboardTemporal />} />
+
+      {/* Si se pierde, lo mandamos al inicio */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default App;
