@@ -1,13 +1,13 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
+// Ejemplo de App.tsx
 import Dashboard from './pages/Dashboard';
+import Pos from './pages/Pos';
+import Usuarios from './pages/Usuarios';
+import Configuracion from './pages/Configuracion';
+// ... otras importaciones
 
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-}
+<Routes>
+  <Route path="/dashboard" element={<Dashboard />} />
+  <Route path="/pos" element={<Pos />} />
+  <Route path="/usuarios" element={<Usuarios />} />
+  <Route path="/configuracion" element={<Configuracion />} />
+</Routes>
