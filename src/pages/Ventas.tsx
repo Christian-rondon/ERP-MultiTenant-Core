@@ -1,24 +1,13 @@
 import React from 'react';
+import MainLayout from '../components/MainLayout';
 
 export default function Ventas() {
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-6 text-white italic">Historial de Ventas</h2>
-      <div className="bg-[#161d2b] border border-white/5 rounded-2xl overflow-hidden">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-black/20 text-gray-400 text-xs uppercase tracking-widest">
-              <th className="p-4">Fecha</th>
-              <th className="p-4">Cliente</th>
-              <th className="p-4">Total</th>
-              <th className="p-4">Estado</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            <tr className="border-b border-white/5 text-gray-500"><td className="p-4" colSpan={4}>No hay ventas registradas hoy.</td></tr>
-          </tbody>
-        </table>
+    <MainLayout title="Ventas">
+      <div className="bg-[#111827] p-10 rounded-[2.5rem] border border-white/5 shadow-xl">
+        <h3 className="text-3xl font-black italic uppercase text-blue-400">Historial de Ventas</h3>
+        <p className="text-gray-400 mt-4 font-bold uppercase text-xs tracking-widest">Registros de hoy: 0</p>
       </div>
-    </div>
+    </MainLayout>
   );
 }
