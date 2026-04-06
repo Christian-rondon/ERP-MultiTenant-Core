@@ -1,3 +1,4 @@
+import Login from './pages/Login'; // Asegúrate de que la "L" coincida con tu archivo
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -12,7 +13,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/Login" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pos" element={<Pos />} />
         <Route path="/inventario" element={<Inventario />} />
