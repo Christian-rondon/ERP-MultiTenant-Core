@@ -1,87 +1,113 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import { Lock, User, ShieldCheck } from 'lucide-react';
 
-const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) => void }) {
+  const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // Inicializamos el GPS
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Esta es la función que activa la entrada al sistema
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault(); // IMPORTANTE: Esto detiene el refresco de la página
-    
-    console.log("Accediendo con:", email);
-    
-    // Aquí es donde ocurre la magia: saltamos al Dashboard
-    navigate('/dashboard'); 
+  const iniciarSesion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      // PRUEBA DE FUERZA BRUTA: Buscamos solo en la tabla usuarios
+      const { data, error: dbError } = await supabase
+        .from('usuarios')
+        .select('*') 
+        .eq('username', usuario.trim())
+        .eq('password', password.trim())
+        .single();
+
+      if (dbError || !data) {
+        console.error("Error detallado de Supabase:", dbError);
+        setError('CREDENCIALES INCORRECTAS O COMERCIO INACTIVO');
+        setLoading(false);
+        return;
+      }
+
+      // Si todo está bien, mandamos los datos al App principal
+      onLoginSuccess(data);
+    } catch (err) {
+      console.error("Error de sistema:", err);
+      setError('ERROR DE CONEXIÓN CON EL SERVIDOR');
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
-      {/* Fondo con efecto de luz Neón */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]"></div>
-      </div>
-
-      <div className="relative z-10 bg-black/40 border border-white/10 backdrop-blur-2xl p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-[450px] text-center">
-        {/* Logo NEXO */}
-        <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(6,182,212,0.5)]">
-            <span className="text-black text-4xl font-black italic">N</span>
+    <div className="min-h-screen bg-[#050a15] flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-[#10172a]/60 backdrop-blur-2xl border border-white/10 p-10 rounded-[40px] shadow-[0_0_100px_rgba(0,209,255,0.1)]">
+        
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#00d1ff] to-[#0057ff] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(0,209,255,0.4)]">
+            <ShieldCheck size={40} className="text-[#050a15]" />
           </div>
+          <h1 className="text-3xl font-black text-white italic tracking-widest uppercase">
+            Nexo Core <span className="text-[#00d1ff]">V3</span>
+          </h1>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[4px] mt-2">
+            Sistemas de Gestión Inteligente
+          </p>
         </div>
 
-        <h1 className="text-3xl font-bold tracking-tight mb-1 uppercase">NEXO</h1>
-        <p className="text-cyan-500 text-[10px] tracking-[0.4em] font-black mb-10 uppercase">Venezuela</p>
-
-        {/* FORMULARIO CONECTADO */}
-        <form className="space-y-5" onSubmit={handleLogin}>
-          <div className="space-y-2 text-left">
-            <input
-              type="email"
-              placeholder="Email de acceso"
-              className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-600"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2 text-left">
-            <input
-              type="password"
-              placeholder="Contraseña"
-              className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-sm focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-gray-600"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Indicador de Tasa BCV (Estético) */}
-          <div className="py-2">
-            <div className="bg-cyan-500/5 border border-cyan-500/10 p-3 rounded-xl flex items-center justify-center gap-2">
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-[9px] text-cyan-500/80 font-bold uppercase tracking-widest">
-                Tasa BCV: Conectando...
-              </span>
+        <form onSubmit={iniciarSesion} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest ml-4">
+              Identificador de Usuario
+            </label>
+            <div className="relative">
+              <User className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00d1ff]" size={18} />
+              <input 
+                type="text" 
+                className="w-full bg-[#050a15] border border-white/5 p-5 pl-14 rounded-2xl text-white font-bold outline-none focus:border-[#00d1ff]/50 transition-all"
+                placeholder="USUARIO"
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
+                required
+              />
             </div>
           </div>
 
+          <div className="space-y-2">
+            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest ml-4">
+              Clave de Acceso
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
+              <input 
+                type="password" 
+                className="w-full bg-[#050a15] border border-white/5 p-5 pl-14 rounded-2xl text-white font-bold outline-none focus:border-[#00d1ff]/50 transition-all text-xl"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-red-500 text-[9px] font-black uppercase text-center animate-pulse">
+              {error}
+            </p>
+          )}
+
           <button 
-            type="submit" 
-            className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-2xl shadow-[0_10px_20px_rgba(6,182,212,0.3)] transition-all active:scale-95 uppercase tracking-wider text-sm"
+            type="submit"
+            disabled={loading}
+            className={`w-full py-5 bg-gradient-to-r from-[#0057ff] to-[#00d1ff] text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-[4px] text-xs mt-4 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Acceder al Sistema Core
+            {loading ? 'AUTENTICANDO...' : 'Ingresar al Sistema'}
           </button>
         </form>
 
-        <p className="mt-8 text-[8px] text-gray-700 uppercase tracking-[0.2em] font-medium">
-          Multi-Tenant ERP • Santa Teresa del Tuy • v2.0
+        <p className="text-center text-[8px] text-gray-600 uppercase font-bold mt-10 tracking-widest">
+          Desarrollado por Construcciones Express &copy; 2026
         </p>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

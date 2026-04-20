@@ -1,97 +1,111 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import React, { useState } from 'react';
+import { 
+  Search, Plus, Minus, Trash2, 
+  User, CreditCard, Banknote, 
+  ShoppingCart, Receipt, Calculator
+} from 'lucide-react';
 
-const TASA_BCV = 450.00;
+const Pos = () => {
+  // Estado para el carrito de compras
+  const [cart, setCart] = useState([
+    { id: '1', nombre: 'Cemento Gris 42.5kg', precio: 8.50, cantidad: 2 },
+    { id: '2', nombre: 'Bombillo LED 12W', precio: 1.50, cantidad: 5 },
+  ]);
 
-export default function Pos() {
-  const [productos, setProductos] = useState<any[]>([]);
-  const [carrito, setCarrito] = useState<any[]>([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [metodoPago, setMetodoPago] = useState("Efectivo USD");
-
-  useEffect(() => {
-    fetchProductos();
-  }, []);
-
-  const fetchProductos = async () => {
-    const { data, error } = await supabase.from('productos').select('*');
-    if (error) console.error("Error BD:", error);
-    setProductos(data || []);
-  };
-
-  const agregarAlCarrito = (p: any) => {
-    const existe = carrito.find(item => item.id === p.id);
-    if (existe) {
-      setCarrito(carrito.map(item => item.id === p.id ? { ...item, cantidad: item.cantidad + 1 } : item));
-    } else {
-      setCarrito([...carrito, { ...p, cantidad: 1 }]);
-    }
-  };
-
-  const finalizarVenta = async () => {
-    if (carrito.length === 0) return;
-    try {
-      const { data: tenant } = await supabase.from('tenants').select('id').limit(1).single();
-      const totalUSD = carrito.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
-
-      const { data: venta, error: vError } = await supabase.from('ventas').insert([{
-        tenant_id: tenant?.id,
-        total: totalUSD,
-        metodo_pago: metodoPago
-      }]).select().single();
-
-      if (vError) throw vError;
-
-      for (const item of carrito) {
-        await supabase.rpc('restar_stock', { p_id: item.id, cant: item.cantidad });
-      }
-
-      setCarrito([]);
-      fetchProductos();
-      alert("¡Venta Exitosa!");
-    } catch (err) {
-      console.error("Error al procesar:", err);
-    }
-  };
-
-  const subtotalUSD = carrito.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+  const tasaBCV = 45.12;
+  const subtotal = cart.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+  const totalBs = subtotal * tasaBCV;
 
   return (
-    <div className="flex h-screen bg-[#0a0f1a] text-white p-6 gap-6">
-      <div className="flex-1 bg-[#161d2b] rounded-3xl p-6 border border-white/5 overflow-hidden flex flex-col">
-        <input 
-          type="text" placeholder="Buscar..."
-          className="w-full p-4 bg-black/20 border border-white/10 rounded-2xl mb-6 outline-none"
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-        <div className="grid grid-cols-3 gap-4 overflow-y-auto">
-          {productos.filter(p => p.nombre?.toLowerCase().includes(busqueda.toLowerCase())).map(p => (
-            <button key={p.id} onClick={() => agregarAlCarrito(p)} className="p-4 bg-[#1f2937] rounded-2xl border border-white/5 text-left">
-              <p className="text-sm font-bold uppercase truncate">{p.nombre}</p>
-              <p className="text-[10px] text-gray-500">STOCK: {p.stock}</p>
-              <p className="text-xl font-black mt-2">${p.precio}</p>
-              <p className="text-[#00df9a] text-xs">Bs.S {(p.precio * TASA_BCV).toFixed(2)}</p>
-            </button>
-          ))}
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
+      
+      {/* 1. SECTOR DE BÚSQUEDA Y SELECCIÓN (IZQUIERDA) */}
+      <div className="lg:col-span-7 flex flex-col gap-6">
+        <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-6 rounded-3xl">
+          <div className="relative group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00d1ff]" size={20} />
+            <input 
+              type="text" 
+              placeholder="ESCANEAR BARCODE O BUSCAR PRODUCTO..." 
+              className="w-full pl-14 pr-6 py-5 bg-[#050a15]/60 border border-white/10 rounded-2xl text-white focus:border-[#00d1ff]/50 focus:outline-none uppercase font-black tracking-widest text-sm"
+            />
+          </div>
+        </div>
+
+        {/* LISTADO DE RESULTADOS / CATEGORÍAS RÁPIDAS */}
+        <div className="flex-1 bg-[#10172a]/40 border border-white/10 rounded-3xl p-6 overflow-y-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[1,2,3,4,5,6].map((i) => (
+              <button key={i} className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-[#00d1ff]/30 transition-all text-left group">
+                <p className="text-[10px] font-black text-white uppercase mb-1 group-hover:text-[#00d1ff]">Producto Ejemplo {i}</p>
+                <p className="text-[9px] text-gray-500 font-bold uppercase">$5.00</p>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="w-[350px] bg-[#161d2b] rounded-3xl p-6 border border-white/5 flex flex-col">
-        <h2 className="text-xl font-black mb-6 text-blue-500">CARRITO</h2>
-        <div className="flex-1 overflow-y-auto space-y-2">
-          {carrito.map(item => (
-            <div key={item.id} className="flex justify-between text-xs bg-black/20 p-3 rounded-xl">
-              <span>{item.nombre} (x{item.cantidad})</span>
-              <span className="font-bold">${(item.precio * item.cantidad).toFixed(2)}</span>
+      {/* 2. EL CARRITO Y TOTALES (DERECHA) */}
+      <div className="lg:col-span-5 flex flex-col gap-6">
+        <div className="flex-1 bg-[#10172a]/60 backdrop-blur-xl border border-[#00d1ff]/20 rounded-3xl p-6 flex flex-col shadow-[0_0_50px_rgba(0,209,255,0.05)]">
+          
+          {/* Cliente Quick-Select */}
+          <div className="flex items-center justify-between mb-6 pb-6 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-[#00d1ff]/10 rounded-lg text-[#00d1ff]"><User size={18}/></div>
+              <p className="text-[10px] font-black text-white uppercase tracking-widest">Consumidor Final</p>
             </div>
-          ))}
-        </div>
-        <div className="mt-6 pt-6 border-t border-white/10">
-          <p className="text-3xl font-black text-right">${subtotalUSD.toFixed(2)}</p>
-          <p className="text-xl font-black text-[#00df9a] text-right mb-6">Bs.S {(subtotalUSD * TASA_BCV).toFixed(2)}</p>
-          <button onClick={finalizarVenta} className="w-full bg-blue-600 p-4 rounded-2xl font-black uppercase">Finalizar</button>
+            <button className="text-[10px] font-bold text-[#00d1ff] uppercase">Cambiar</button>
+          </div>
+
+          {/* Lista del Carrito */}
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            {cart.map((item) => (
+              <div key={item.id} className="flex items-center justify-between group">
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-white uppercase">{item.nombre}</p>
+                  <p className="text-[9px] text-gray-500 font-bold tracking-widest">${item.precio} c/u</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center bg-white/5 rounded-xl border border-white/10">
+                    <button className="p-2 text-gray-500 hover:text-white"><Minus size={12}/></button>
+                    <span className="text-[10px] font-black px-2">{item.cantidad}</span>
+                    <button className="p-2 text-[#00d1ff] hover:text-white"><Plus size={12}/></button>
+                  </div>
+                  <button className="text-gray-600 hover:text-red-500 transition-colors"><Trash2 size={16}/></button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Totales y Pago */}
+          <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
+            <div className="flex justify-between text-gray-500 uppercase font-black text-[10px] tracking-[2px]">
+              <span>Subtotal</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center p-4 bg-[#00d1ff]/5 rounded-2xl border border-[#00d1ff]/20">
+              <span className="text-[10px] font-black text-[#00d1ff] uppercase tracking-[3px]">Total Bs.</span>
+              <span className="text-xl font-black text-white italic">Bs. {totalBs.toLocaleString('de-DE', {minimumFractionDigits: 2})}</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 pt-4">
+              <button className="flex flex-col items-center gap-2 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all">
+                <Banknote className="text-green-500" size={20} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Efectivo</span>
+              </button>
+              <button className="flex flex-col items-center gap-2 p-4 bg-[#00d1ff] rounded-2xl hover:scale-105 transition-all text-[#050a15]">
+                <CreditCard size={20} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Procesar</span>
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
+
     </div>
   );
-}
+};
+
+export default Pos;
