@@ -1,28 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
-  Package, Search, Plus, Filter, 
-  ArrowUpRight, ArrowDownRight, MoreVertical, 
-  Edit3, Trash2, Barcode, DollarSign 
+  Search, Plus, Barcode, Edit3, Trash2, Store 
 } from 'lucide-react';
 
 const Inventario = () => {
-  // Datos de ejemplo para visualizar el diseño profesional
-  const productos = [
-    { id: '1', nombre: 'Cemento Gris 42.5kg', codigo: '75010203', stock: 150, precio: 8.50, categoria: 'Construcción', status: 'In-Stock' },
-    { id: '2', nombre: 'Tubo PVC 1/2" 6mts', codigo: '75010405', stock: 12, precio: 3.20, categoria: 'Plomería', status: 'Low-Stock' },
-    { id: '3', nombre: 'Pintura Clase A Blanca', codigo: '75010607', stock: 45, precio: 25.00, categoria: 'Pinturas', status: 'In-Stock' },
-    { id: '4', nombre: 'Bombillo LED 12W', codigo: '75010809', stock: 0, precio: 1.50, categoria: 'Electricidad', status: 'Out-of-Stock' },
-  ];
+  const [productos, setProductos] = useState<any[]>([]);
+  const [comercios, setComercios] = useState<any[]>([]); 
+  const [loading, setLoading] = useState(true);
+
+  const fetchComercios = async () => {
+    const { data } = await supabase.from('comercios').select('id, nombre').order('nombre');
+    if (data) setComercios(data);
+  };
+
+  const fetchProductos = async () => {
+    try {
+      setLoading(true);
+      const idRemoto = localStorage.getItem('comercio_seleccionado_id');
+      let query = supabase.from('productos').select('*');
+
+      if (idRemoto) {
+        query = query.eq('comercio_id', idRemoto);
+      }
+
+      const { data, error } = await query.order('nombre', { ascending: true });
+      if (error) throw error;
+      setProductos(data || []);
+    } catch (error) {
+      console.error("Error al cargar inventario:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComercios();
+    fetchProductos();
+  }, []);
+
+  const seleccionarComercio = (id: string) => {
+    if (id) {
+      localStorage.setItem('comercio_seleccionado_id', id);
+    } else {
+      localStorage.removeItem('comercio_seleccionado_id');
+    }
+    fetchProductos();
+  };
+
+  const valorTotal = productos.reduce((acc, prod) => acc + (prod.precio * prod.stock), 0);
 
   return (
     <div className="space-y-6">
       
-      {/* 1. HEADER & MÉTRICAS RÁPIDAS */}
+      {/* HEADER & MÉTRICAS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6">
           <div>
             <h2 className="text-3xl font-black tracking-[4px] uppercase text-white italic">Control de Stock</h2>
-            <p className="text-[10px] font-bold tracking-[3px] text-[#00d1ff] uppercase mt-2 italic">Gestión de Mercancía Global</p>
+            <p className="text-[10px] font-bold tracking-[3px] text-[#00d1ff] uppercase mt-2 italic">
+              {localStorage.getItem('comercio_seleccionado_id') ? 'GESTIÓN REMOTA DE CLIENTE' : 'Gestión de Mercancía Global'}
+            </p>
           </div>
           <button className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00d1ff] to-[#0057ff] text-white font-black rounded-2xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,209,255,0.3)] uppercase text-xs tracking-widest">
             <Plus size={18} /> Añadir Producto
@@ -32,13 +70,30 @@ const Inventario = () => {
         <div className="lg:col-span-4 bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-6 rounded-3xl flex flex-col justify-center">
           <p className="text-[9px] font-black tracking-[3px] text-gray-500 uppercase mb-2">Valor Total Inventario</p>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl font-black text-white italic">$12,450.00</h3>
-            <span className="text-[10px] text-green-500 font-bold uppercase">+Bs 562,740</span>
+            <h3 className="text-3xl font-black text-white italic">${valorTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3>
+            <span className="text-[10px] text-green-500 font-bold uppercase">+Bs {(valorTotal * 45).toLocaleString('de-DE')}</span>
           </div>
         </div>
       </div>
 
-      {/* 2. FILTROS Y BÚSQUEDA */}
+      {/* SELECTOR DE COMERCIOS */}
+      <div className="relative group">
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00d1ff]">
+          <Store size={20} />
+        </div>
+        <select 
+          onChange={(e) => seleccionarComercio(e.target.value)}
+          value={localStorage.getItem('comercio_seleccionado_id') || ""}
+          className="w-full pl-14 pr-6 py-4 bg-[#10172a]/80 border border-[#00d1ff]/30 rounded-2xl text-sm text-white focus:outline-none focus:border-[#00d1ff] transition-all uppercase font-bold tracking-widest appearance-none"
+        >
+          <option value="">-- SELECCIONAR COMERCIO PARA AUDITAR --</option>
+          {comercios.map(c => (
+            <option key={c.id} value={c.id} className="bg-[#10172a]">{c.nombre}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* BUSQUEDA DE PRODUCTOS Y FILTROS */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         <div className="md:col-span-7 relative group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#00d1ff] transition-colors" size={20} />
@@ -51,9 +106,6 @@ const Inventario = () => {
         <div className="md:col-span-3">
           <select className="w-full h-full px-6 bg-[#10172a]/40 border border-white/10 rounded-2xl text-gray-400 text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-[#00d1ff]/50">
             <option>Todas las Categorías</option>
-            <option>Construcción</option>
-            <option>Plomería</option>
-            <option>Electricidad</option>
           </select>
         </div>
         <div className="md:col-span-2">
@@ -63,8 +115,8 @@ const Inventario = () => {
         </div>
       </div>
 
-      {/* 3. TABLA DE PRODUCTOS TECH */}
-      <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+      {/* TABLA DE PRODUCTOS COMPLETA */}
+      <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl min-h-[300px]">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -78,51 +130,54 @@ const Inventario = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {productos.map((prod) => (
-                <tr key={prod.id} className="hover:bg-[#00d1ff]/5 transition-colors group">
-                  <td className="px-6 py-5">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-white uppercase tracking-wider">{prod.nombre}</span>
-                      <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">{prod.codigo}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
-                      {prod.categoria}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-black ${prod.stock <= 15 ? 'text-orange-500' : 'text-white'}`}>
-                        {prod.stock}
+              {loading ? (
+                <tr><td colSpan={6} className="text-center py-20 text-gray-500 font-black text-[10px] uppercase tracking-widest animate-pulse">Cargando base de datos...</td></tr>
+              ) : productos.length === 0 ? (
+                <tr><td colSpan={6} className="text-center py-20 text-gray-500 font-black text-[10px] uppercase tracking-widest">No hay productos en este comercio.</td></tr>
+              ) : (
+                productos.map((prod) => (
+                  <tr key={prod.id} className="hover:bg-[#00d1ff]/5 transition-colors group">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-white uppercase tracking-wider">{prod.nombre}</span>
+                        <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">{prod.codigo || 'S/N'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-3 py-1 bg-white/5 rounded-full text-[9px] font-bold text-gray-400 uppercase tracking-tighter border border-white/5">
+                        {prod.categoria || 'General'}
                       </span>
-                      <span className="text-[9px] text-gray-600 font-bold uppercase italic text-nowrap">Unidades</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-[#00d1ff] tracking-wider">${prod.precio.toFixed(2)}</span>
-                      <span className="text-[8px] text-gray-600 font-bold uppercase">Bs {(prod.precio * 45).toFixed(2)}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-md border ${
-                      prod.status === 'In-Stock' ? 'text-green-500 border-green-500/20 bg-green-500/5' :
-                      prod.status === 'Low-Stock' ? 'text-orange-500 border-orange-500/20 bg-orange-500/5' :
-                      'text-red-500 border-red-500/20 bg-red-500/5'
-                    }`}>
-                      {prod.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"><Edit3 size={14}/></button>
-                      <button className="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-all"><Trash2 size={14}/></button>
-                      <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-[#00d1ff] transition-all"><MoreVertical size={14}/></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-black ${prod.stock <= 10 ? 'text-orange-500' : 'text-white'}`}>{prod.stock}</span>
+                        <span className="text-[8px] text-gray-600 font-bold uppercase italic">Unid.</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 font-black text-[#00d1ff] text-xs">
+                      <div className="flex flex-col">
+                        <span>${Number(prod.precio).toFixed(2)}</span>
+                        <span className="text-[8px] text-gray-600 font-bold uppercase">Bs {(prod.precio * 45).toFixed(2)}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-md border ${
+                        prod.stock > 10 ? 'text-green-500 border-green-500/20 bg-green-500/5' :
+                        prod.stock > 0 ? 'text-orange-500 border-orange-500/20 bg-orange-500/5' :
+                        'text-red-500 border-red-500/20 bg-red-500/5'
+                      }`}>
+                        {prod.stock > 10 ? 'In-Stock' : prod.stock > 0 ? 'Low-Stock' : 'Out-of-Stock'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"><Edit3 size={14}/></button>
+                        <button className="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-all"><Trash2 size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

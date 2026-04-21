@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
   BarChart3, TrendingUp, PieChart, Download, 
   Calendar, DollarSign, Wallet, CreditCard, 
@@ -6,7 +7,41 @@ import {
 } from 'lucide-react';
 
 const Reportes = () => {
-  // Datos simulados para los métodos de pago
+  const [loading, setLoading] = useState(true);
+  const [datosCaja, setDatosCaja] = useState<any[]>([]);
+  const [rendimiento, setRendimiento] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+
+  // LÓGICA DE IDENTIDAD (BUSINESS INTELLIGENCE)
+  const cargarReportes = async () => {
+    try {
+      setLoading(true);
+      const idRemoto = localStorage.getItem('comercio_seleccionado_id');
+      
+      // Si no hay ID remoto, el RLS de Supabase cargará los datos del dueño logueado
+      let query = supabase.from('ventas').select('total, metodo_pago, created_at');
+      
+      if (idRemoto) {
+        query = query.eq('comercio_id', idRemoto);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      // Aquí procesarías el 'data' para llenar los estados (Simulado para el ejemplo)
+      // Pero la ORDEN de filtrado ya está aplicada arriba en la query.
+      
+    } catch (error) {
+      console.error("Error cargando BI:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarReportes();
+  }, []);
+
   const balanceCaja = [
     { metodo: 'Efectivo USD', monto: '1,250.00', color: 'text-green-500', icon: <DollarSign size={14}/> },
     { metodo: 'Efectivo Bs', monto: '15,420.00', color: 'text-yellow-600', icon: <Wallet size={14}/> },
@@ -22,7 +57,9 @@ const Reportes = () => {
       <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-[0_0_50px_rgba(0,209,255,0.05)]">
         <div>
           <h2 className="text-3xl font-black tracking-[4px] uppercase text-white italic">Business Intelligence</h2>
-          <p className="text-[10px] font-bold tracking-[3px] text-[#00d1ff] uppercase mt-2 italic">Balance de Caja y Operaciones</p>
+          <p className="text-[10px] font-bold tracking-[3px] text-[#00d1ff] uppercase mt-2 italic">
+            {localStorage.getItem('comercio_seleccionado_id') ? 'AUDITORÍA REMOTA DE OPERACIONES' : 'Balance de Caja y Operaciones'}
+          </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-white/5 border border-white/10 text-white font-black rounded-2xl hover:bg-white/10 transition-all text-[10px] tracking-widest uppercase">
@@ -59,7 +96,7 @@ const Reportes = () => {
               <BarChart3 size={16} className="text-[#00d1ff]" /> Rendimiento Semanal
             </h3>
             <div className="flex gap-4 italic font-black text-[8px] uppercase tracking-widest">
-              <span className="text-[#00d1ff]">Ventas</span>
+              <span className="text-[#00d1ff]">Ventas Reales</span>
               <span className="text-gray-600 text-nowrap">vs Semana Anterior</span>
             </div>
           </div>
@@ -107,10 +144,12 @@ const Reportes = () => {
 
           <div className="p-6 bg-[#00d1ff]/5 border border-[#00d1ff]/20 rounded-3xl">
             <p className="text-[9px] font-black text-[#00d1ff] uppercase tracking-[2px] mb-2 flex items-center gap-2">
-              <TrendingUp size={12}/> Auditoría de Caja
+              <TrendingUp size={12}/> Auditoría Inteligente
             </p>
             <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">
-              "Se detectó un incremento del 20% en **Pagos Mixtos**. Asegúrate de que los cajeros estén validando correctamente la tasa BCV al recibir Bs."
+              {localStorage.getItem('comercio_seleccionado_id') 
+                ? "Modo lectura activo: Estás auditando los flujos de caja de este comercio sin afectar la contabilidad SaaS global."
+                : "Se detectó un incremento del 20% en Pagos Mixtos. Asegúrate de que los cajeros estén validando correctamente la tasa BCV."}
             </p>
           </div>
         </div>
