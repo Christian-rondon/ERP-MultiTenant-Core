@@ -1,93 +1,95 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { 
-  ShoppingBag, Users, Package, 
-  ArrowUpRight, ArrowDownRight, LayoutDashboard 
-} from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, ArrowUpRight } from 'lucide-react';
 
-const StoreDashboard = () => {
-  const { id } = useParams();
-  const [comercio, setComercio] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+interface StoreDashboardProps {
+  comercioId?: string;
+  nombreComercio?: string;
+  rif?: string;
+}
+
+export default function StoreDashboard({ comercioId, nombreComercio, rif }: StoreDashboardProps) {
+  const [stats, setStats] = useState({ ventas: 0, productos: 0, stockBajo: 0 });
 
   useEffect(() => {
-    const getStoreData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('comercios')
-          .select('*')
-          .eq('id', id)
-          .single();
+    if (comercioId) {
+      fetchOwnerStats(comercioId);
+    }
+  }, [comercioId]);
 
-        if (error) throw error;
-        setComercio(data);
-      } catch (err) {
-        console.error("Error cargando comercio:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getStoreData();
-  }, [id]);
+  const fetchOwnerStats = async (id: string) => {
+    // 1. Total productos
+    const { count: prodCount } = await supabase
+      .from('productos')
+      .select('*', { count: 'exact', head: true })
+      .eq('comercio_id', id);
 
-  if (loading) return <div className="p-10 text-white animate-pulse">Cargando Instancia...</div>;
+    // 2. Alerta Stock Bajo (< 5)
+    const { count: lowStock } = await supabase
+      .from('productos')
+      .select('*', { count: 'exact', head: true })
+      .eq('comercio_id', id)
+      .lt('stock', 5);
+
+    // 3. Ventas totales
+    const { data: sales } = await supabase
+      .from('ventas')
+      .select('total')
+      .eq('comercio_id', id);
+
+    setStats({
+      ventas: sales?.reduce((acc, curr) => acc + curr.total, 0) || 0,
+      productos: prodCount || 0,
+      stockBajo: lowStock || 0
+    });
+  };
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* CABECERA DE INSTANCIA */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter">
-            {comercio?.nombre || 'Panel de Comercio'}
-          </h1>
-          <p className="text-[10px] text-gray-500 font-bold tracking-[3px] uppercase">
-            ID: {id?.slice(0, 8)}... • RIF: {comercio?.rif}
-          </p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <header>
+        <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">
+          {nombreComercio || 'MI COMERCIO'}
+        </h1>
+        <div className="flex gap-3 mt-1">
+          <span className="text-[10px] text-[#00d1ff] font-bold tracking-[4px] uppercase bg-[#00d1ff]/10 px-3 py-1 rounded-full border border-[#00d1ff]/20">
+            RIF: {rif || 'J-00000000-0'}
+          </span>
         </div>
-        <div className="px-4 py-2 bg-[#00d1ff]/10 border border-[#00d1ff]/20 rounded-xl">
-          <span className="text-[10px] font-black text-[#00d1ff] uppercase">Sesión de Auditoría Activa</span>
-        </div>
-      </div>
+      </header>
 
-      {/* KPI CARDS PARA EL DUEÑO */}
+      {/* VISTA RESUMIDA PARA EL DUEÑO */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-[#10172a]/60 border border-white/10 p-6 rounded-2xl">
-          <div className="flex justify-between text-gray-500 mb-4">
-            <ShoppingBag size={20} />
-            <ArrowUpRight size={16} className="text-green-500" />
-          </div>
-          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Ventas Totales</p>
-          <h3 className="text-3xl font-black text-white mt-1 italic">$0.00</h3>
+        {/* TARJETA VENTAS */}
+        <div className="bg-[#10172a] border border-white/5 p-6 rounded-[24px] relative overflow-hidden group">
+          <DollarSign className="absolute -right-2 -top-2 w-20 h-20 text-white/5" />
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Ventas Totales</p>
+          <h2 className="text-3xl font-black text-white mt-1">${stats.ventas.toFixed(2)}</h2>
+          <ArrowUpRight className="text-green-500 absolute top-6 right-6 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
 
-        <div className="bg-[#10172a]/60 border border-white/10 p-6 rounded-2xl">
-          <div className="flex justify-between text-gray-500 mb-4">
-            <Package size={20} />
-            <span className="text-[10px] font-bold text-orange-500 uppercase">Stock Bajo</span>
-          </div>
-          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Productos</p>
-          <h3 className="text-3xl font-black text-white mt-1 italic">0</h3>
+        {/* TARJETA INVENTARIO */}
+        <div className="bg-[#10172a] border border-white/5 p-6 rounded-[24px] relative overflow-hidden">
+          <Package className="absolute -right-2 -top-2 w-20 h-20 text-white/5" />
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Inventario Total</p>
+          <h2 className="text-3xl font-black text-white mt-1">{stats.productos}</h2>
         </div>
 
-        <div className="bg-[#10172a]/60 border border-white/10 p-6 rounded-2xl">
-          <div className="flex justify-between text-gray-500 mb-4">
-            <Users size={20} />
-          </div>
-          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Clientes</p>
-          <h3 className="text-3xl font-black text-white mt-1 italic">0</h3>
+        {/* TARJETA ALERTAS */}
+        <div className={`p-6 rounded-[24px] border relative overflow-hidden transition-all ${stats.stockBajo > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[#10172a] border-white/5'}`}>
+          <AlertTriangle className={`absolute -right-2 -top-2 w-20 h-20 ${stats.stockBajo > 0 ? 'text-red-500/20' : 'text-white/5'}`} />
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Alertas de Stock</p>
+          <h2 className={`text-3xl font-black mt-1 ${stats.stockBajo > 0 ? 'text-red-500' : 'text-white'}`}>
+            {stats.stockBajo} <span className="text-xs font-bold text-gray-500 uppercase">Items Bajos</span>
+          </h2>
         </div>
       </div>
 
-      {/* ÁREA DE TRABAJO (TABLAS DE INVENTARIO O VENTAS) */}
-      <div className="bg-[#10172a]/60 border border-white/10 rounded-3xl p-8 min-h-[300px] flex items-center justify-center border-dashed">
-         <div className="text-center">
-            <LayoutDashboard size={48} className="mx-auto text-gray-700 mb-4" />
-            <p className="text-xs text-gray-600 font-bold uppercase tracking-[2px]">Módulo de datos en construcción</p>
-         </div>
+      {/* ÁREA DE GRÁFICOS / REPORTES (SIN CONFIGURACIÓN NI USUARIOS) */}
+      <div className="bg-[#10172a]/30 border-2 border-dashed border-white/5 rounded-[40px] py-20 flex flex-col items-center justify-center text-center">
+        <p className="text-gray-600 font-bold uppercase tracking-[4px] text-[10px]">
+          Resumen de actividad comercial
+        </p>
       </div>
     </div>
   );
-};
-
-export default StoreDashboard;
+}
