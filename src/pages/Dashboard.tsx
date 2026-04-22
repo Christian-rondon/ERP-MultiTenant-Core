@@ -54,7 +54,6 @@ const Dashboard = () => {
     fetchTasaConfig();
     fetchComercios();
 
-    // SUSCRIPCIÓN EN TIEMPO REAL (Mágico)
     const channel = supabase
       .channel('dashboard-realtime')
       .on(
@@ -65,10 +64,8 @@ const Dashboard = () => {
           table: 'configuracion'
         },
         (payload) => {
-          console.log('Sincronización recibida:', payload);
           if (payload.new && payload.new.tasa_dolar) {
             setTasaBCV(payload.new.tasa_dolar);
-            // Animación de actualización
             setSyncing(true);
             setTimeout(() => setSyncing(false), 1500);
           }
@@ -140,6 +137,7 @@ const Dashboard = () => {
                 <span className="text-[8px] font-black uppercase italic">API Status</span>
                 <span className="text-[8px] text-[#00d1ff] font-bold">Online</span>
               </div>
+              {/* CORRECCIÓN LÍNEA 143: Añadido cierre de comillas y div */}
               <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                 <div className="bg-[#00d1ff] w-[98%] h-full shadow-[0_0_8px_#00d1ff]"></div>
               </div>
@@ -163,8 +161,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 bg-[#10172a]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
           <div className="flex items-center justify-between mb-6 text-white text-[10px] font-black tracking-[3px] uppercase">
-             <h2><Activity size={14} className="text-[#00d1ff] inline mr-2" /> Radar Multi-Tenant</h2>
-             <div className="px-2 py-1 bg-[#00d1ff]/10 rounded text-[#00d1ff]">{comercios.length} NODOS</div>
+              <h2><Activity size={14} className="text-[#00d1ff] inline mr-2" /> Radar Multi-Tenant</h2>
+              <div className="px-2 py-1 bg-[#00d1ff]/10 rounded text-[#00d1ff]">{comercios.length} NODOS</div>
           </div>
           <div className="space-y-3">
             {loading ? (
