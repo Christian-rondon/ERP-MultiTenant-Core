@@ -1,133 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from './lib/supabase';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/MainLayout';
+
+// IMPORTACIÓN DE PÁGINAS
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Pos from './pages/Pos';
 import Inventario from './pages/Inventario';
-import Ventas from './pages/Ventas';
 import Usuarios from './pages/Usuarios';
 import Reportes from './pages/Reportes';
 import Configuracion from './pages/Configuracion';
 import StoreDashboard from './pages/StoreDashboard';
 
-// Componente de protección que respeta tu lógica de Superadmin y Dueño
-const RutaPrivada = ({ children, vistaId, permisos, user }: any) => {
-  if (!user) return <Navigate to="/login" replace />;
+// 1. COMPONENTE DE PROTECCIÓN DE RUTAS
+const RutaPrivada = ({ children, rolesPermitidos }: { children: React.ReactNode, rolesPermitidos: string[] }) => {
+  // Intentamos recuperar la sesión del localStorage
+  const session = JSON.parse(localStorage.getItem('nexo_session') || 'null');
   
-  // 1. Superadmin tiene pase libre
-  // 2. Si es una vista autorizada en el array de permisos, pasa
-  // 3. El Dashboard de la tienda (:id) siempre es accesible para el dueño
-  if (
-    user.rol === 'superadmin' || 
-    permisos.includes(vistaId) || 
-    vistaId === 'store_view' 
-  ) {
-    return children;
+  // Si no hay sesión, al login de inmediato
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  const userRol = session.rol?.toLowerCase().trim();
+
+  // El Superadmin siempre pasa
+  if (userRol === 'superadmin') return <>{children}</>;
+
+  // Si el rol está permitido para esta página, pasa
+  if (rolesPermitidos.includes(userRol)) {
+    return <>{children}</>;
   }
 
-  return <Navigate to="/login" replace />;
-};
-
-const LoginWrapper = ({ onLogin }: { onLogin: (user: any) => void }) => {
-  const navigate = useNavigate();
-
-  const handleLoginSuccess = (user: any) => {
-    onLogin(user);
-    if (user.rol === 'superadmin') {
-      navigate('/dashboard');
-    } else {
-      // El dueño va directo a su StoreDashboard
-      navigate(`/admin/view/${user.comercio_id}`);
-    }
+  // Si no tiene permiso, lo mandamos a su "Home" correspondiente
+  const redireccion: Record<string, string> = {
+    dueño: `/admin/view/${session.comercio_id}`,
+    cajera: '/pos',
+    depositario: '/inventario'
   };
 
-  return <Login onLoginSuccess={handleLoginSuccess} />;
+  return <Navigate to={redireccion[userRol] || '/login'} replace />;
 };
 
 function App() {
-  const [user, setUser] = React.useState<any>(null);
-  const [permisos, setPermisos] = useState<string[]>([]);
+  // Estado para manejar la sesión globalmente
+  const [userSession, setUserSession] = useState<any>(() => {
+    const saved = localStorage.getItem('nexo_session');
+    return saved ? JSON.parse(saved) : null;
+  });
 
-  // Cargamos los permisos sin bloquear el renderizado inicial
-  useEffect(() => {
-    if (user) {
-      const fetchAcceso = async () => {
-        const { data } = await supabase
-          .from('usuarios_acceso')
-          .select('vistas_permitidas')
-          .eq('email', user.email)
-          .single();
-        
-        if (data) {
-          setPermisos(data.vistas_permitidas || []);
-        } else if (user.rol !== 'superadmin') {
-          // Si es dueño (no está en la tabla de empleados), vistas por default
-          setPermisos(['dashboard', 'inventario', 'reportes']);
-        }
-      };
-      fetchAcceso();
-    }
-  }, [user]);
+  // Función para manejar el éxito del login
+  const handleLoginSuccess = (data: any) => {
+    localStorage.setItem('nexo_session', JSON.stringify(data));
+    setUserSession(data);
+  };
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginWrapper onLogin={setUser} />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* Rutas con tu estructura original, ahora protegidas */}
-        <Route path="/dashboard" element={
-          <RutaPrivada vistaId="dashboard" permisos={permisos} user={user}>
-            <MainLayout><Dashboard /></MainLayout>
-          </RutaPrivada>
-        } />
-
-        <Route path="/pos" element={
-          <RutaPrivada vistaId="pos" permisos={permisos} user={user}>
-            <MainLayout><Pos /></MainLayout>
-          </RutaPrivada>
-        } />
-
-        <Route path="/inventario" element={
-          <RutaPrivada vistaId="inventario" permisos={permisos} user={user}>
-            <MainLayout><Inventario /></MainLayout>
-          </RutaPrivada>
-        } />
-
-        <Route path="/ventas" element={
-          <RutaPrivada vistaId="ventas" permisos={permisos} user={user}>
-            <MainLayout><Ventas /></MainLayout>
-          </RutaPrivada>
-        } />
-
-        <Route path="/usuarios" element={
-          <RutaPrivada vistaId="usuarios" permisos={permisos} user={user}>
-            <MainLayout><Usuarios /></MainLayout>
-          </RutaPrivada>
-        } />
-
-        <Route path="/reportes" element={
-          <RutaPrivada vistaId="reportes" permisos={permisos} user={user}>
-            <MainLayout><Reportes /></MainLayout>
-          </RutaPrivada>
-        } />
-
-        <Route path="/configuracion" element={
-          <RutaPrivada vistaId="configuracion" permisos={permisos} user={user}>
-            <MainLayout><Configuracion /></MainLayout>
-          </RutaPrivada>
+        {/* RUTA PÚBLICA: LOGIN */}
+        <Route path="/login" element={
+          userSession ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
         } />
         
-        {/* Tu ruta de StoreDashboard para los dueños */}
-        <Route path="/admin/view/:id" element={
-          <RutaPrivada vistaId="store_view" permisos={permisos} user={user}>
-            <MainLayout><StoreDashboard /></MainLayout>
+        {/* REDIRECCIÓN INICIAL SEGÚN ROL */}
+        <Route path="/" element={
+          userSession 
+            ? (userSession.rol?.toLowerCase() === 'superadmin' 
+                ? <Navigate to="/dashboard" replace /> 
+                : <Navigate to={`/admin/view/${userSession.comercio_id}`} replace />)
+            : <Navigate to="/login" replace />
+        } />
+
+        {/* --- RUTAS PROTEGIDAS --- */}
+
+        {/* RADAR SaaS (SOLO SUPERADMIN) */}
+        <Route path="/dashboard" element={
+          <RutaPrivada rolesPermitidos={['superadmin']}>
+            <MainLayout username={userSession}><Dashboard /></MainLayout>
           </RutaPrivada>
         } />
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* PUNTO DE VENTA (SUPERADMIN Y CAJERA) */}
+        <Route path="/pos" element={
+          <RutaPrivada rolesPermitidos={['superadmin', 'cajera']}>
+            <MainLayout username={userSession}><Pos /></MainLayout>
+          </RutaPrivada>
+        } />
+
+        {/* INVENTARIO (TODOS LOS ROLES TIENEN ACCESO) */}
+        <Route path="/inventario" element={
+          <RutaPrivada rolesPermitidos={['superadmin', 'dueño', 'cajera', 'depositario']}>
+            <MainLayout username={userSession}><Inventario /></MainLayout>
+          </RutaPrivada>
+        } />
+
+        {/* REPORTES (SUPERADMIN Y DUEÑO) */}
+        <Route path="/reportes" element={
+          <RutaPrivada rolesPermitidos={['superadmin', 'dueño']}>
+            <MainLayout username={userSession}><Reportes /></MainLayout>
+          </RutaPrivada>
+        } />
+
+        {/* GESTIÓN DE USUARIOS DEL SaaS (SOLO SUPERADMIN) */}
+        <Route path="/usuarios" element={
+          <RutaPrivada rolesPermitidos={['superadmin']}>
+            <MainLayout username={userSession}><Usuarios /></MainLayout>
+          </RutaPrivada>
+        } />
+
+        {/* CONFIGURACIÓN GLOBAL (SOLO SUPERADMIN) */}
+        <Route path="/configuracion" element={
+          <RutaPrivada rolesPermitidos={['superadmin']}>
+            <MainLayout username={userSession}><Configuracion /></MainLayout>
+          </RutaPrivada>
+        } />
+
+        {/* DASHBOARD ESPECÍFICO DEL COMERCIO (DUEÑO Y SUPERADMIN) */}
+        <Route path="/admin/view/:id" element={
+          <RutaPrivada rolesPermitidos={['superadmin', 'dueño']}>
+            <MainLayout username={userSession}><StoreDashboard /></MainLayout>
+          </RutaPrivada>
+        } />
+
+        {/* CAPTURA DE RUTAS NO EXISTENTES */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

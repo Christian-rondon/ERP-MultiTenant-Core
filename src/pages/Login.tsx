@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Lock, User, ShieldCheck } from 'lucide-react';
 
 export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) => void }) {
-  const [usuario, setUsuario] = useState('');
+  const [identificador, setIdentificador] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,25 +14,52 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
     setLoading(true);
 
     try {
-      // PRUEBA DE FUERZA BRUTA: Buscamos solo en la tabla usuarios
-      const { data, error: dbError } = await supabase
+      let usuarioEncontrado = null;
+
+      // 1. Intentamos buscar en la tabla 'usuarios' (Donde está el SuperAdmin)
+      const { data: dataAdmin, error: errAdmin } = await supabase
         .from('usuarios')
-        .select('*') 
-        .eq('username', usuario.trim())
-        .eq('password', password.trim())
+        .select('*')
+        .eq('username', identificador.trim())
         .single();
 
-      if (dbError || !data) {
-        console.error("Error detallado de Supabase:", dbError);
-        setError('CREDENCIALES INCORRECTAS O COMERCIO INACTIVO');
+      if (dataAdmin) {
+        usuarioEncontrado = dataAdmin;
+      } else {
+        // 2. Si no está en 'usuarios', buscamos en 'usuarios_accesos'
+        const { data: dataAcceso, error: errAcceso } = await supabase
+          .from('usuarios_accesos')
+          .select('*')
+          .eq('username', identificador.trim())
+          .single();
+        
+        if (dataAcceso) {
+          usuarioEncontrado = dataAcceso;
+        }
+      }
+
+      // 3. Verificación de existencia
+      if (!usuarioEncontrado) {
+        setError('EL USUARIO NO EXISTE EN EL SISTEMA');
         setLoading(false);
         return;
       }
 
-      // Si todo está bien, mandamos los datos al App principal
-      onLoginSuccess(data);
+      // 4. Verificación de contraseña (Comparación exacta)
+      if (usuarioEncontrado.password !== password.trim()) {
+        setError('LA CONTRASEÑA ES INCORRECTA');
+        setLoading(false);
+        return;
+      }
+
+      // Log de control para debug en consola
+      console.log("✅ Acceso exitoso:", usuarioEncontrado.username, "Rol:", usuarioEncontrado.rol);
+      
+      // 5. Mandamos los datos al componente padre
+      onLoginSuccess(usuarioEncontrado);
+
     } catch (err) {
-      console.error("Error de sistema:", err);
+      console.error("Error crítico en el proceso de login:", err);
       setError('ERROR DE CONEXIÓN CON EL SERVIDOR');
       setLoading(false);
     }
@@ -57,7 +84,7 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
         <form onSubmit={iniciarSesion} className="space-y-6">
           <div className="space-y-2">
             <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest ml-4">
-              Identificador de Usuario
+              Nombre de Usuario / Username
             </label>
             <div className="relative">
               <User className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00d1ff]" size={18} />
@@ -65,8 +92,8 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
                 type="text" 
                 className="w-full bg-[#050a15] border border-white/5 p-5 pl-14 rounded-2xl text-white font-bold outline-none focus:border-[#00d1ff]/50 transition-all"
                 placeholder="USUARIO"
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
+                value={identificador}
+                onChange={(e) => setIdentificador(e.target.value)}
                 required
               />
             </div>

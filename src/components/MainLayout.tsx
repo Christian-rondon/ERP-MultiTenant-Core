@@ -5,93 +5,118 @@ import {
   ShoppingCart, BarChart3, LogOut, Menu, X 
 } from 'lucide-react';
 
-const MainLayout = ({ children }: { children: React.ReactNode }) => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  username?: any; 
+}
+
+const MainLayout = ({ children, username: propUsername }: MainLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Recuperamos la sesión
+  const sessionData = propUsername || JSON.parse(localStorage.getItem('nexo_session') || 'null');
+  const userRol = sessionData?.rol?.toLowerCase().trim() || '';
+  const comercioId = sessionData?.comercio_id;
+
+  // DEFINICIÓN DE ACCESOS (Superadmin mantiene TODO)
   const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
-    { name: 'Inventario', icon: <Package size={20} />, path: '/inventario' },
-    { name: 'POS / Ventas', icon: <ShoppingCart size={20} />, path: '/pos' },
-    { name: 'Usuarios', icon: <Users size={20} />, path: '/usuarios' },
-    { name: 'Reportes', icon: <BarChart3 size={20} />, path: '/reportes' },
-    { name: 'Configuración', icon: <Settings size={20} />, path: '/configuracion' },
+    { 
+      name: 'Dashboard', 
+      icon: <LayoutDashboard size={20} />, 
+      // Superadmin va al Radar (Dashboard), Dueño va a su vista de tienda
+      path: userRol === 'superadmin' ? '/dashboard' : `/admin/view/${comercioId}`,
+      roles: ['superadmin', 'dueño'] 
+    },
+    { 
+      name: 'POS / Ventas', 
+      icon: <ShoppingCart size={20} />, 
+      path: '/pos', 
+      roles: ['superadmin', 'cajera'] 
+    },
+    { 
+      name: 'Inventario', 
+      icon: <Package size={20} />, 
+      path: '/inventario', 
+      roles: ['superadmin', 'dueño', 'cajera', 'depositario'] 
+    },
+    { 
+      name: 'Reportes', 
+      icon: <BarChart3 size={20} />, 
+      path: '/reportes', 
+      roles: ['superadmin', 'dueño'] 
+    },
+    { 
+      name: 'Usuarios', 
+      icon: <Users size={20} />, 
+      path: '/usuarios', 
+      roles: ['superadmin'] // Intocable para el resto
+    },
+    { 
+      name: 'Configuración', 
+      icon: <Settings size={20} />, 
+      path: '/configuracion', 
+      roles: ['superadmin'] // Intocable para el resto
+    },
   ];
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    setIsMobileMenuOpen(false); // Cierra el menú al hacer click en móviles
-  };
+  // FILTRO: Si es superadmin, ve los 6 botones. Si no, solo los de su rol.
+  const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRol));
 
   return (
-    <div className="flex min-h-screen bg-[#050a15] text-white font-sans">
-      
-      {/* BOTÓN MÓVIL (Solo visible en pantallas pequeñas) */}
-      <button 
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 right-4 z-[60] bg-[#00d1ff] p-2 rounded-lg shadow-lg text-[#050a15]"
-      >
-        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {/* SIDEBAR RESPONSIVA */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#10172a]/95 backdrop-blur-2xl border-r border-white/10 
-        transition-transform duration-300 ease-in-out transform
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 lg:static lg:block
-      `}>
+    <div className="flex min-h-screen bg-[#050a15] text-white">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#10172a] border-r border-white/10 transition-transform lg:translate-x-0 lg:static ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-8 border-b border-white/5">
-          <h1 className="text-2xl font-black tracking-[3px] text-white italic">NEXO</h1>
-          <p className="text-[8px] tracking-[4px] text-[#00d1ff] font-bold uppercase">Venezuela V3</p>
+          <h1 className="text-2xl font-black italic tracking-tighter uppercase">Nexo</h1>
+          <p className="text-[8px] text-[#00d1ff] font-bold uppercase tracking-[4px]">Venezuela V3</p>
+          <div className="mt-2 inline-block px-2 py-0.5 bg-[#00d1ff]/10 rounded border border-[#00d1ff]/20">
+            <span className="text-[7px] text-[#00d1ff] font-black uppercase tracking-widest">
+              {sessionData?.rol || 'USUARIO'}
+            </span>
+          </div>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => handleNavigation(item.path)}
-              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all uppercase tracking-wider ${
-                location.pathname === item.path
-                  ? 'bg-[#00d1ff]/10 text-[#00d1ff] border border-[#00d1ff]/30 shadow-[0_0_15px_rgba(0,209,255,0.1)]'
-                  : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'
-              }`}
-            >
-              {item.icon}
-              {item.name}
-            </button>
-          ))}
+          {visibleMenuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <button
+                key={item.path}
+                onClick={() => { navigate(item.path); setIsMobileMenuOpen(false); }}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all uppercase tracking-wider group
+                  ${isActive 
+                    ? 'bg-[#00d1ff]/10 text-[#00d1ff] border border-[#00d1ff]/30 shadow-[0_0_15px_rgba(0,209,255,0.1)]' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </button>
+            );
+          })}
         </nav>
 
-        <div className="p-4 border-t border-white/5 mt-auto">
+        <div className="p-4 border-t border-white/5">
           <button 
-            onClick={() => navigate('/login')}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-500/10 transition-all uppercase tracking-wider"
+            onClick={() => { localStorage.clear(); navigate('/login'); }}
+            className="w-full flex items-center gap-4 px-4 py-3 text-red-500 font-bold uppercase text-[10px] hover:bg-red-500/10 rounded-xl transition-all"
           >
-            <LogOut size={20} />
-            Salir
+            <LogOut size={18} /> Salir del Sistema
           </button>
         </div>
       </aside>
 
-      {/* OVERLAY PARA MÓVILES (Oscurece el fondo cuando el menú está abierto) */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* CONTENIDO PRINCIPAL ADAPTABLE */}
-      <main className="flex-1 w-full relative min-h-screen overflow-x-hidden p-4 md:p-8 lg:p-10">
-        {/* Fondo sutil */}
-        <div className="absolute inset-0 opacity-5 pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto">
-          {children}
-        </div>
+      <main className="flex-1 p-4 md:p-10 overflow-y-auto">
+        <div className="max-w-7xl mx-auto">{children}</div>
       </main>
+
+      <button 
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed bottom-6 right-6 z-[60] bg-[#00d1ff] p-4 rounded-full text-[#050a15]"
+      >
+        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
     </div>
   );
 };
