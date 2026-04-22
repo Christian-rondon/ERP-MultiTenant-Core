@@ -1,162 +1,172 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
-  BarChart3, TrendingUp, PieChart, Download, 
-  Calendar, DollarSign, Wallet, CreditCard, 
-  Smartphone, Layers, ArrowRight
+  BarChart3, 
+  Calendar, 
+  Download, 
+  Smartphone, 
+  CreditCard, 
+  Coins, 
+  DollarSign,
+  TrendingUp,
+  Layers,      // <--- IMPORTADO
+  Activity,    // <--- IMPORTADO
+  ArrowUpRight // <--- IMPORTADO
 } from 'lucide-react';
 
-const Reportes = () => {
-  const [loading, setLoading] = useState(true);
-  const [datosCaja, setDatosCaja] = useState<any[]>([]);
-  const [rendimiento, setRendimiento] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
-
-  // LÓGICA DE IDENTIDAD (BUSINESS INTELLIGENCE)
-  const cargarReportes = async () => {
-    try {
-      setLoading(true);
-      const idRemoto = localStorage.getItem('comercio_seleccionado_id');
-      
-      // Si no hay ID remoto, el RLS de Supabase cargará los datos del dueño logueado
-      let query = supabase.from('ventas').select('total, metodo_pago, created_at');
-      
-      if (idRemoto) {
-        query = query.eq('comercio_id', idRemoto);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Aquí procesarías el 'data' para llenar los estados (Simulado para el ejemplo)
-      // Pero la ORDEN de filtrado ya está aplicada arriba en la query.
-      
-    } catch (error) {
-      console.error("Error cargando BI:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function Reportes() {
+  const [ventas, setVentas] = useState<any[]>([]);
+  const [resumen, setResumen] = useState({
+    usd: 0,
+    bs: 0,
+    pago_movil: 0,
+    punto: 0,
+    mixto: 0,
+  });
 
   useEffect(() => {
-    cargarReportes();
+    fetchData();
+
+    const channel = supabase
+      .channel('bi-realtime-master')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ventas' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const balanceCaja = [
-    { metodo: 'Efectivo USD', monto: '1,250.00', color: 'text-green-500', icon: <DollarSign size={14}/> },
-    { metodo: 'Efectivo Bs', monto: '15,420.00', color: 'text-yellow-600', icon: <Wallet size={14}/> },
-    { metodo: 'Pago Móvil', monto: '8,200.00', color: 'text-[#00d1ff]', icon: <Smartphone size={14}/> },
-    { metodo: 'Punto de Venta', monto: '12,100.00', color: 'text-purple-500', icon: <CreditCard size={14}/> },
-    { metodo: 'Pagos Mixtos', monto: '3,450.00', color: 'text-orange-500', icon: <Layers size={14}/> },
-  ];
+  async function fetchData() {
+    // Como Superadmin, traemos TODO para ver la red global
+    const { data } = await supabase.from('ventas').select('*');
+
+    if (data) {
+      const stats = data.reduce((acc, v) => {
+        acc.usd += Number(v.total_usd || 0);
+        acc.bs += Number(v.total_bs || 0);
+        if (v.metodo_pago === 'pago_movil') acc.pago_movil += Number(v.total_bs || 0);
+        if (v.metodo_pago === 'punto') acc.punto += Number(v.total_bs || 0);
+        if (v.metodo_pago === 'mixto') acc.mixto += Number(v.total_usd || 0);
+        return acc;
+      }, { usd: 0, bs: 0, pago_movil: 0, punto: 0, mixto: 0 });
+
+      setResumen(stats);
+      setVentas(data);
+    }
+  }
 
   return (
-    <div className="space-y-6 pb-10">
-      
-      {/* HEADER DE REPORTES */}
-      <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-[0_0_50px_rgba(0,209,255,0.05)]">
+    <div className="p-6 space-y-8 bg-[#0a0f1a] min-h-screen text-white">
+      {/* HEADER IDÉNTICO A TU CAPTURA */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black tracking-[4px] uppercase text-white italic">Business Intelligence</h2>
-          <p className="text-[10px] font-bold tracking-[3px] text-[#00d1ff] uppercase mt-2 italic">
-            {localStorage.getItem('comercio_seleccionado_id') ? 'AUDITORÍA REMOTA DE OPERACIONES' : 'Balance de Caja y Operaciones'}
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">Business Intelligence</h1>
+          <p className="text-[#00d1ff] text-[10px] font-bold uppercase tracking-[0.2em] mt-1 italic">
+            Auditoría Remota de Operaciones Master
           </p>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-white/5 border border-white/10 text-white font-black rounded-2xl hover:bg-white/10 transition-all text-[10px] tracking-widest uppercase">
-            <Calendar size={16} /> Filtrar Fecha
+        <div className="flex gap-3">
+          <button className="bg-[#111827] px-6 py-2.5 rounded-xl border border-white/5 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">
+            <Calendar size={14} className="text-gray-400"/> Filtrar Fecha
           </button>
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-[#00d1ff] text-[#050a15] font-black rounded-2xl hover:scale-105 transition-all text-[10px] tracking-widest uppercase">
-            <Download size={16} /> Exportar PDF
+          <button className="bg-[#00d1ff] px-6 py-2.5 rounded-xl text-black flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(0,209,255,0.4)] hover:brightness-110 transition-all">
+            <Download size={14}/> Exportar PDF
           </button>
         </div>
       </div>
 
-      {/* SECCIÓN DE BALANCE DE CAJA POR MÉTODOS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {balanceCaja.map((item, i) => (
-          <div key={i} className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-5 rounded-2xl group hover:border-[#00d1ff]/30 transition-all">
-            <div className="flex justify-between items-center mb-3">
-              <div className={`p-2 bg-white/5 rounded-lg ${item.color}`}>{item.icon}</div>
-              <ArrowRight size={12} className="text-gray-700 group-hover:text-[#00d1ff] transition-colors" />
-            </div>
-            <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{item.metodo}</p>
-            <h3 className="text-lg font-black text-white italic mt-1">
-              {item.metodo.includes('USD') ? '$' : 'Bs.'} {item.monto}
-            </h3>
-          </div>
-        ))}
+      {/* MÉTRICAS DE RED (TARJETAS) */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <StatCard title="Efectivo USD" val={`$ ${resumen.usd.toLocaleString()}`} color="text-green-400" icon={<DollarSign size={16}/>} />
+        <StatCard title="Efectivo BS" val={`Bs. ${resumen.bs.toLocaleString()}`} color="text-white" icon={<Coins size={16}/>} />
+        <StatCard title="Pago Móvil" val={`Bs. ${resumen.pago_movil.toLocaleString()}`} color="text-[#00d1ff]" icon={<Smartphone size={16}/>} />
+        <StatCard title="Punto de Venta" val={`Bs. ${resumen.punto.toLocaleString()}`} color="text-purple-400" icon={<CreditCard size={16}/>} />
+        <StatCard title="Pagos Mixtos" val={`$ ${resumen.mixto.toLocaleString()}`} color="text-orange-400" icon={<Layers size={16}/>} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* GRÁFICO DE FLUJO DE CAJA SEMANAL */}
-        <div className="lg:col-span-8 bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl min-h-[400px] flex flex-col">
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* GRÁFICO DE RENDIMIENTO SEMANAL */}
+        <div className="lg:col-span-2 bg-[#111827] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl relative">
           <div className="flex justify-between items-center mb-10">
-            <h3 className="text-xs font-black tracking-[3px] uppercase text-white flex items-center gap-2">
-              <BarChart3 size={16} className="text-[#00d1ff]" /> Rendimiento Semanal
+            <h3 className="text-xs font-black uppercase italic flex items-center gap-2 tracking-widest">
+              <BarChart3 size={16} className="text-[#00d1ff]"/> Rendimiento Semanal Global
             </h3>
-            <div className="flex gap-4 italic font-black text-[8px] uppercase tracking-widest">
+            <div className="flex gap-4 text-[8px] font-black uppercase italic tracking-widest">
               <span className="text-[#00d1ff]">Ventas Reales</span>
-              <span className="text-gray-600 text-nowrap">vs Semana Anterior</span>
+              <span className="text-gray-600">Vs Semana Anterior</span>
             </div>
           </div>
           
-          <div className="flex-1 flex items-end justify-between gap-3 px-4">
-            {[30, 85, 45, 100, 60, 75, 55].map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-4 group">
-                <div className="w-full bg-white/5 rounded-t-xl relative overflow-hidden flex items-end h-64">
-                   <div 
-                    style={{ height: `${h}%` }} 
-                    className="w-full bg-gradient-to-t from-[#0057ff] to-[#00d1ff] rounded-t-xl group-hover:brightness-125 transition-all shadow-[0_0_20px_rgba(0,209,255,0.2)]"
-                   ></div>
+          <div className="flex justify-between items-end h-64 px-2">
+            {[35, 65, 45, 95, 55, 85, 40].map((h, i) => (
+              <div key={i} className="flex flex-col items-center gap-4 w-full group">
+                <div className="relative w-14 flex items-end justify-center">
+                  <div className="absolute w-full bg-white/[0.02] rounded-t-2xl h-full border-t border-x border-white/5"></div>
+                  <div 
+                    className="w-full bg-gradient-to-t from-[#00d1ff] to-blue-600 rounded-t-2xl transition-all duration-1000 shadow-[0_0_25px_rgba(0,209,255,0.2)] group-hover:shadow-[0_0_35px_rgba(0,209,255,0.4)]"
+                    style={{ height: `${h}%` }}
+                  ></div>
                 </div>
-                <span className="text-[9px] font-black text-gray-600 uppercase">Día {i+1}</span>
+                <span className="text-[9px] font-black text-gray-600 uppercase italic">Día 0{i+1}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* MÉTRICAS DE MÉTODOS MIXTOS Y CATEGORÍAS */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl">
-            <h3 className="text-xs font-black tracking-[3px] uppercase text-white mb-8 flex items-center gap-2">
-              <PieChart size={16} className="text-purple-500" /> Mix de Cobro
+        {/* COLUMNA DERECHA: MIX Y AUDITORÍA */}
+        <div className="space-y-6">
+          <div className="bg-[#111827] p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
+            <h3 className="text-xs font-black uppercase italic mb-8 tracking-widest flex items-center gap-2">
+               Mix de Cobro en Red
             </h3>
-            
-            <div className="space-y-6">
-              {[
-                { name: 'Digital (Punto/PM)', val: 65, color: 'bg-[#00d1ff]' },
-                { name: 'Efectivo (USD/Bs)', val: 25, color: 'bg-green-500' },
-                { name: 'Mixto', val: 10, color: 'bg-orange-500' },
-              ].map((item, i) => (
-                <div key={i} className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-black uppercase">
-                    <span className="text-gray-400 tracking-widest">{item.name}</span>
-                    <span className="text-white">{item.val}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div style={{ width: `${item.val}%` }} className={`h-full ${item.color} rounded-full`}></div>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-7">
+              <ProgressItem label="Digital (Punto/PM)" val="65%" color="bg-[#00d1ff]" />
+              <ProgressItem label="Efectivo (USD/BS)" val="25%" color="bg-green-500" />
+              <ProgressItem label="Mixto" val="10%" color="bg-orange-500" />
             </div>
           </div>
 
-          <div className="p-6 bg-[#00d1ff]/5 border border-[#00d1ff]/20 rounded-3xl">
-            <p className="text-[9px] font-black text-[#00d1ff] uppercase tracking-[2px] mb-2 flex items-center gap-2">
-              <TrendingUp size={12}/> Auditoría Inteligente
-            </p>
-            <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">
-              {localStorage.getItem('comercio_seleccionado_id') 
-                ? "Modo lectura activo: Estás auditando los flujos de caja de este comercio sin afectar la contabilidad SaaS global."
-                : "Se detectó un incremento del 20% en Pagos Mixtos. Asegúrate de que los cajeros estén validando correctamente la tasa BCV."}
+          <div className="bg-[#111827] p-6 rounded-[2rem] border border-[#00d1ff]/10 bg-gradient-to-br from-[#111827] to-[#0a0f1a]">
+            <h4 className="text-[10px] font-black text-[#00d1ff] uppercase italic flex items-center gap-2">
+              <Activity size={14}/> Auditoría Master Activa
+            </h4>
+            <p className="text-[9px] text-gray-500 font-bold leading-relaxed mt-3 italic uppercase tracking-tighter">
+              Modo Superadmin: Estás auditando el tráfico global de la red Nexo Core V3 sin interferir en los cierres de caja locales de los comercios.
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );
-};
+}
 
-export default Reportes;
+// COMPONENTES AUXILIARES
+function StatCard({ title, val, color, icon }: any) {
+  return (
+    <div className="bg-[#111827] p-5 rounded-[2rem] border border-white/5 hover:border-white/10 transition-all group relative overflow-hidden">
+      <div className={`absolute top-4 right-4 ${color} opacity-10 group-hover:opacity-30 transition-opacity`}>{icon}</div>
+      <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1">{title}</p>
+      <h2 className={`text-2xl font-black italic tracking-tighter ${color}`}>{val}</h2>
+      <div className="mt-3 flex justify-end">
+        <div className="p-1.5 bg-white/5 rounded-lg text-gray-600 group-hover:text-white transition-colors">
+          <ArrowUpRight size={10}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressItem({ label, val, color }: any) {
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between text-[10px] font-black uppercase italic tracking-tighter">
+        <span className="text-gray-400">{label}</span>
+        <span className="text-white">{val}</span>
+      </div>
+      <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+        <div className={`h-full ${color} rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)]`} style={{ width: val }}></div>
+      </div>
+    </div>
+  );
+}

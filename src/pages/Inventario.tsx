@@ -6,25 +6,37 @@ import {
 
 const Inventario = () => {
   const [productos, setProductos] = useState<any[]>([]);
-  const [comercios, setComercios] = useState<any[]>([]); 
+  const [comercios, setComercios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tasaActual, setTasaActual] = useState(45);
+  const [filtroNombre, setFiltroNombre] = useState("");
 
-  const fetchComercios = async () => {
-    const { data } = await supabase.from('comercios').select('id, nombre').order('nombre');
-    if (data) setComercios(data);
+  // 1. Cargamos comercios y tasa al iniciar
+  const fetchInitialData = async () => {
+    // Cargar Comercios para el Selector
+    const { data: dataComercios } = await supabase.from('comercios').select('id, nombre').order('nombre');
+    if (dataComercios) setComercios(dataComercios);
+
+    // Cargar Tasa dinámica de configuración
+    const { data: dataConfig } = await supabase.from('configuracion').select('tasa_dolar').eq('id', 1).single();
+    if (dataConfig?.tasa_dolar) setTasaActual(dataConfig.tasa_dolar);
   };
 
+  // 2. Función Maestra de carga de productos
   const fetchProductos = async () => {
     try {
       setLoading(true);
       const idRemoto = localStorage.getItem('comercio_seleccionado_id');
+      
       let query = supabase.from('productos').select('*');
 
-      if (idRemoto) {
+      // Si hay un comercio seleccionado, filtramos estrictamente por ese ID
+      if (idRemoto && idRemoto !== "") {
         query = query.eq('comercio_id', idRemoto);
       }
 
       const { data, error } = await query.order('nombre', { ascending: true });
+      
       if (error) throw error;
       setProductos(data || []);
     } catch (error) {
@@ -35,10 +47,11 @@ const Inventario = () => {
   };
 
   useEffect(() => {
-    fetchComercios();
+    fetchInitialData();
     fetchProductos();
   }, []);
 
+  // 3. Manejador de cambio de comercio
   const seleccionarComercio = (id: string) => {
     if (id) {
       localStorage.setItem('comercio_seleccionado_id', id);
@@ -48,7 +61,16 @@ const Inventario = () => {
     fetchProductos();
   };
 
-  const valorTotal = productos.reduce((acc, prod) => acc + (prod.precio * prod.stock), 0);
+  // 4. Lógica de búsqueda local (por nombre o código)
+  const productosFiltrados = productos.filter(p => 
+    p.nombre?.toLowerCase().includes(filtroNombre.toLowerCase()) || 
+    p.codigo?.toLowerCase().includes(filtroNombre.toLowerCase())
+  );
+
+  // Cálculo de valor total basado en lo que hay en pantalla
+  const valorTotal = productosFiltrados.reduce((acc, prod) => 
+    acc + (Number(prod.precio || 0) * Number(prod.stock || 0)), 0
+  );
 
   return (
     <div className="space-y-6">
@@ -71,7 +93,7 @@ const Inventario = () => {
           <p className="text-[9px] font-black tracking-[3px] text-gray-500 uppercase mb-2">Valor Total Inventario</p>
           <div className="flex items-baseline gap-2">
             <h3 className="text-3xl font-black text-white italic">${valorTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3>
-            <span className="text-[10px] text-green-500 font-bold uppercase">+Bs {(valorTotal * 45).toLocaleString('de-DE')}</span>
+            <span className="text-[10px] text-green-500 font-bold uppercase">+Bs {(valorTotal * tasaActual).toLocaleString('de-DE')}</span>
           </div>
         </div>
       </div>
@@ -84,7 +106,7 @@ const Inventario = () => {
         <select 
           onChange={(e) => seleccionarComercio(e.target.value)}
           value={localStorage.getItem('comercio_seleccionado_id') || ""}
-          className="w-full pl-14 pr-6 py-4 bg-[#10172a]/80 border border-[#00d1ff]/30 rounded-2xl text-sm text-white focus:outline-none focus:border-[#00d1ff] transition-all uppercase font-bold tracking-widest appearance-none"
+          className="w-full pl-14 pr-6 py-4 bg-[#10172a]/80 border border-[#00d1ff]/30 rounded-2xl text-sm text-white focus:outline-none focus:border-[#00d1ff] transition-all uppercase font-bold tracking-widest appearance-none cursor-pointer"
         >
           <option value="">-- SELECCIONAR COMERCIO PARA AUDITAR --</option>
           {comercios.map(c => (
@@ -93,12 +115,14 @@ const Inventario = () => {
         </select>
       </div>
 
-      {/* BUSQUEDA DE PRODUCTOS Y FILTROS */}
+      {/* BÚSQUEDA Y FILTROS */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         <div className="md:col-span-7 relative group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#00d1ff] transition-colors" size={20} />
           <input 
             type="text" 
+            value={filtroNombre}
+            onChange={(e) => setFiltroNombre(e.target.value)}
             placeholder="BUSCAR POR NOMBRE, CÓDIGO O BARCODE..." 
             className="w-full pl-14 pr-6 py-5 bg-[#10172a]/40 border border-white/10 rounded-2xl text-sm text-white focus:outline-none focus:border-[#00d1ff]/50 focus:ring-1 focus:ring-[#00d1ff]/20 transition-all placeholder:text-gray-600 uppercase font-bold tracking-widest"
           />
@@ -115,8 +139,8 @@ const Inventario = () => {
         </div>
       </div>
 
-      {/* TABLA DE PRODUCTOS COMPLETA */}
-      <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl min-h-[300px]">
+      {/* TABLA DE PRODUCTOS */}
+      <div className="bg-[#10172a]/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl min-h-[400px]">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -132,10 +156,10 @@ const Inventario = () => {
             <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr><td colSpan={6} className="text-center py-20 text-gray-500 font-black text-[10px] uppercase tracking-widest animate-pulse">Cargando base de datos...</td></tr>
-              ) : productos.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-20 text-gray-500 font-black text-[10px] uppercase tracking-widest">No hay productos en este comercio.</td></tr>
+              ) : productosFiltrados.length === 0 ? (
+                <tr><td colSpan={6} className="text-center py-20 text-gray-500 font-black text-[10px] uppercase tracking-widest">No hay resultados para mostrar</td></tr>
               ) : (
-                productos.map((prod) => (
+                productosFiltrados.map((prod) => (
                   <tr key={prod.id} className="hover:bg-[#00d1ff]/5 transition-colors group">
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
@@ -156,8 +180,8 @@ const Inventario = () => {
                     </td>
                     <td className="px-6 py-5 font-black text-[#00d1ff] text-xs">
                       <div className="flex flex-col">
-                        <span>${Number(prod.precio).toFixed(2)}</span>
-                        <span className="text-[8px] text-gray-600 font-bold uppercase">Bs {(prod.precio * 45).toFixed(2)}</span>
+                        <span>${Number(prod.precio || 0).toFixed(2)}</span>
+                        <span className="text-[8px] text-gray-600 font-bold uppercase">Bs {(Number(prod.precio || 0) * tasaActual).toFixed(2)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -171,8 +195,8 @@ const Inventario = () => {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"><Edit3 size={14}/></button>
-                        <button className="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-all"><Trash2 size={14}/></button>
+                        <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all"><Edit3 size={14} /></button>
+                        <button className="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-all"><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
