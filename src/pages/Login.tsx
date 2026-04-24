@@ -21,7 +21,7 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
         .from('usuarios')
         .select('*')
         .eq('username', identificador.trim())
-        .single();
+        .maybeSingle(); // Usamos maybeSingle para evitar errores si no existe
 
       if (dataAdmin) {
         usuarioEncontrado = dataAdmin;
@@ -31,7 +31,7 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
           .from('usuarios_accesos')
           .select('*')
           .eq('username', identificador.trim())
-          .single();
+          .maybeSingle();
         
         if (dataAcceso) {
           usuarioEncontrado = dataAcceso;
@@ -52,7 +52,20 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
         return;
       }
 
-      // Log de control para debug en consola
+      // --- AGREGADO: PERSISTENCIA DE SESIÓN POR ID Y COMERCIO ---
+      localStorage.setItem('nexo_id', usuarioEncontrado.id);
+      localStorage.setItem('nexo_username', usuarioEncontrado.username);
+      localStorage.setItem('nexo_role', usuarioEncontrado.rol.toLowerCase());
+      
+      // Si el usuario tiene comercio_id (dueños/empleados), lo guardamos
+      if (usuarioEncontrado.comercio_id) {
+        localStorage.setItem('nexo_comercio_id', usuarioEncontrado.comercio_id);
+      } else {
+        // Si es SuperAdmin, limpiamos cualquier comercio_id previo
+        localStorage.removeItem('nexo_comercio_id');
+      }
+      // ---------------------------------------------------------
+
       console.log("✅ Acceso exitoso:", usuarioEncontrado.username, "Rol:", usuarioEncontrado.rol);
       
       // 5. Mandamos los datos al componente padre
@@ -132,7 +145,7 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
         </form>
 
         <p className="text-center text-[8px] text-gray-600 uppercase font-bold mt-10 tracking-widest">
-          Desarrollado por Construcciones Express &copy; 2026
+          Desarrollador Nexo Core &copy; 2026
         </p>
       </div>
     </div>
