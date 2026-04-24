@@ -1,122 +1,136 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
-  LayoutDashboard, Package, Settings, Users, 
-  ShoppingCart, BarChart3, LogOut, Menu, X 
+  LayoutDashboard, 
+  ShoppingCart, 
+  Package, 
+  Users, 
+  BarChart3, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  X,
+  Receipt 
 } from 'lucide-react';
 
 interface MainLayoutProps {
   children: React.ReactNode;
-  username?: any; 
 }
 
-const MainLayout = ({ children, username: propUsername }: MainLayoutProps) => {
+const MainLayout = ({ children }: MainLayoutProps) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Recuperamos la sesión
-  const sessionData = propUsername || JSON.parse(localStorage.getItem('nexo_session') || 'null');
-  const userRol = sessionData?.rol?.toLowerCase().trim() || '';
-  const comercioId = sessionData?.comercio_id;
+  // CORRECCIÓN QUIRÚRGICA: Limpieza total y redirección forzada
+  const handleLogout = () => {
+    try {
+      // 1. Limpiamos TODO el rastro de la sesión
+      localStorage.clear(); 
+      sessionStorage.clear();
+      
+      // 2. Redirección usando replace: true para que no pueda volver atrás
+      // IMPORTANTE: Verifica que en tu App.tsx la ruta sea exactamente "/login"
+      navigate('/login', { replace: true });
+      
+      // 3. Forzar un pequeño refresco si el AuthGuard se queda pegado
+      window.location.reload(); 
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
 
-  // DEFINICIÓN DE ACCESOS (Superadmin mantiene TODO)
   const menuItems = [
-    { 
-      name: 'Dashboard', 
-      icon: <LayoutDashboard size={20} />, 
-      // Superadmin va al Radar (Dashboard), Dueño va a su vista de tienda
-      path: userRol === 'superadmin' ? '/dashboard' : `/admin/view/${comercioId}`,
-      roles: ['superadmin', 'dueño'] 
-    },
-    { 
-      name: 'POS / Ventas', 
-      icon: <ShoppingCart size={20} />, 
-      path: '/pos', 
-      roles: ['superadmin', 'cajera'] 
-    },
-    { 
-      name: 'Inventario', 
-      icon: <Package size={20} />, 
-      path: '/inventario', 
-      roles: ['superadmin', 'dueño', 'cajera', 'depositario'] 
-    },
-    { 
-      name: 'Reportes', 
-      icon: <BarChart3 size={20} />, 
-      path: '/reportes', 
-      roles: ['superadmin', 'dueño'] 
-    },
-    { 
-      name: 'Usuarios', 
-      icon: <Users size={20} />, 
-      path: '/usuarios', 
-      roles: ['superadmin'] // Intocable para el resto
-    },
-    { 
-      name: 'Configuración', 
-      icon: <Settings size={20} />, 
-      path: '/configuracion', 
-      roles: ['superadmin'] // Intocable para el resto
-    },
+    { icon: <LayoutDashboard size={22} />, label: 'Dashboard', to: '/dashboard' },
+    { icon: <ShoppingCart size={22} />, label: 'Ventas POS', to: '/pos' },
+    { icon: <Package size={22} />, label: 'Inventario', to: '/inventario' },
+    { icon: <Receipt size={22} />, label: 'Registro de Gastos', to: '/egresos' }, 
+    { icon: <Users size={22} />, label: 'Usuarios', to: '/usuarios' },
+    { icon: <BarChart3 size={22} />, label: 'Reportes', to: '/reportes' },
+    { icon: <Settings size={22} />, label: 'Configuración', to: '/configuracion' },
   ];
 
-  // FILTRO: Si es superadmin, ve los 6 botones. Si no, solo los de su rol.
-  const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRol));
-
   return (
-    <div className="flex min-h-screen bg-[#050a15] text-white">
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#10172a] border-r border-white/10 transition-transform lg:translate-x-0 lg:static ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-8 border-b border-white/5">
-          <h1 className="text-2xl font-black italic tracking-tighter uppercase">Nexo</h1>
-          <p className="text-[8px] text-[#00d1ff] font-bold uppercase tracking-[4px]">Venezuela V3</p>
-          <div className="mt-2 inline-block px-2 py-0.5 bg-[#00d1ff]/10 rounded border border-[#00d1ff]/20">
-            <span className="text-[7px] text-[#00d1ff] font-black uppercase tracking-widest">
-              {sessionData?.rol || 'USUARIO'}
-            </span>
-          </div>
+    <div className="h-screen w-full bg-[#050810] flex overflow-hidden">
+      
+      <aside 
+        className={`${
+          isSidebarOpen ? 'w-72' : 'w-20'
+        } bg-[#0a0f1a] border-r border-white/5 transition-all duration-300 flex flex-col h-full z-50 flex-shrink-0 shadow-2xl`}
+      >
+        {/* LOGO AREA */}
+        <div className="p-6 flex items-center justify-between flex-shrink-0">
+          {isSidebarOpen && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-red-600 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.5)]"></div>
+              <span className="text-xl font-black italic tracking-tighter text-white uppercase">
+                NEXO<span className="text-red-600">CORE</span>
+              </span>
+            </div>
+          )}
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 hover:bg-white/5 rounded-lg text-gray-400 transition-colors"
+          >
+            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {visibleMenuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+        {/* NAVIGATION */}
+        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-hide">
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.to;
             return (
-              <button
-                key={item.path}
-                onClick={() => { navigate(item.path); setIsMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all uppercase tracking-wider group
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`
+                  flex items-center gap-4 px-4 py-4 rounded-2xl transition-all group relative
                   ${isActive 
-                    ? 'bg-[#00d1ff]/10 text-[#00d1ff] border border-[#00d1ff]/30 shadow-[0_0_15px_rgba(0,209,255,0.1)]' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
+                    ? 'bg-red-600 text-white shadow-[0_10px_20px_rgba(220,38,38,0.2)]' 
+                    : 'text-gray-500 hover:bg-white/5 hover:text-white'}
+                `}
               >
-                {item.icon}
-                <span>{item.name}</span>
-              </button>
+                <div className={`${isActive ? 'text-white' : 'group-hover:text-red-500'} transition-colors flex-shrink-0`}>
+                  {item.icon}
+                </div>
+                {isSidebarOpen && (
+                  <span className="font-bold uppercase tracking-widest text-[11px] italic whitespace-nowrap">
+                    {item.label}
+                  </span>
+                )}
+                {!isSidebarOpen && isActive && (
+                   <div className="absolute left-0 w-1.5 h-6 bg-red-600 rounded-r-full shadow-[0_0_10px_rgb(220,38,38)]"></div>
+                )}
+              </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-          <button 
-            onClick={() => { localStorage.clear(); navigate('/login'); }}
-            className="w-full flex items-center gap-4 px-4 py-3 text-red-500 font-bold uppercase text-[10px] hover:bg-red-500/10 rounded-xl transition-all"
+        {/* LOGOUT */}
+        <div className="p-4 border-t border-white/5 flex-shrink-0 bg-[#0a0f1a]">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-gray-500 hover:bg-red-600/10 hover:text-red-500 transition-all italic font-bold text-xs uppercase tracking-widest group cursor-pointer"
           >
-            <LogOut size={18} /> Salir del Sistema
+            <div className="group-hover:rotate-12 transition-transform">
+              <LogOut size={22} />
+            </div>
+            {isSidebarOpen && <span>Cerrar Sesión</span>}
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 p-4 md:p-10 overflow-y-auto">
-        <div className="max-w-7xl mx-auto">{children}</div>
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto relative bg-[#050810]">
+        <div className="relative z-10 p-6 md:p-8 pt-10"> 
+          {children}
+        </div>
+        
+        {/* Decoración de fondo */}
+        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-red-600/5 blur-[150px] -z-10 rounded-full pointer-events-none"></div>
       </main>
-
-      <button 
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed bottom-6 right-6 z-[60] bg-[#00d1ff] p-4 rounded-full text-[#050a15]"
-      >
-        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
     </div>
   );
 };
