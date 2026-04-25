@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/MainLayout';
 
@@ -10,13 +10,32 @@ import Inventario from './pages/Inventario';
 import Usuarios from './pages/Usuarios';
 import Reportes from './pages/Reportes';
 import Configuracion from './pages/Configuracion';
-import Egresos from './pages/Egresos'; // <--- AGREGAMOS ESTA IMPORTACIÓN
+import Egresos from './pages/Egresos';
+
+// DEFINICIÓN DE TIPOS
+interface ProtectedRouteProps {
+  user: any; // Puedes cambiar 'any' por la interfaz de tu usuario si la tienes
+  children: ReactNode;
+}
+
+// COMPONENTE PARA PROTEGER RUTAS (Versión TSX)
+const ProtectedRoute = ({ user, children }: ProtectedRouteProps) => {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <MainLayout>{children}</MainLayout>;
+};
 
 function App() {
-  // Estado para manejar la sesión
-  const [userSession, setUserSession] = useState(() => {
+  // Estado para manejar la sesión con tipo dinámico
+  const [userSession, setUserSession] = useState<any>(() => {
     const saved = localStorage.getItem('nexo_session');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.error("Error al parsear la sesión:", error);
+      return null;
+    }
   });
 
   const handleLoginSuccess = (data: any) => {
@@ -27,27 +46,28 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Si hay sesión, el login redirige al inicio */}
-        <Route path="/login" element={
-          userSession ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
-        } />
+        {/* RUTA DE LOGIN */}
+        <Route 
+          path="/login" 
+          element={
+            userSession ? <Navigate to="/dashboard" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
+          } 
+        />
         
-        {/* Redirección automática según sesión */}
-        <Route path="/" element={
-          userSession ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
-        } />
+        {/* RAIZ: Redirección automática */}
+        <Route 
+          path="/" 
+          element={<Navigate to={userSession ? "/dashboard" : "/login"} replace />} 
+        />
 
-        {/* TODAS LAS RUTAS OPERATIVAS CON EL MENÚ NEÓN */}
-        <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
-        <Route path="/pos" element={<MainLayout><Pos /></MainLayout>} />
-        <Route path="/inventario" element={<MainLayout><Inventario /></MainLayout>} />
-        
-        {/* NUEVA RUTA DE EGRESOS ESTILO POS */}
-        <Route path="/egresos" element={<MainLayout><Egresos /></MainLayout>} />
-        
-        <Route path="/usuarios" element={<MainLayout><Usuarios /></MainLayout>} />
-        <Route path="/reportes" element={<MainLayout><Reportes /></MainLayout>} />
-        <Route path="/configuracion" element={<MainLayout><Configuracion /></MainLayout>} />
+        {/* RUTAS OPERATIVAS PROTEGIDAS */}
+        <Route path="/dashboard" element={<ProtectedRoute user={userSession}><Dashboard /></ProtectedRoute>} />
+        <Route path="/pos" element={<ProtectedRoute user={userSession}><Pos /></ProtectedRoute>} />
+        <Route path="/inventario" element={<ProtectedRoute user={userSession}><Inventario /></ProtectedRoute>} />
+        <Route path="/egresos" element={<ProtectedRoute user={userSession}><Egresos /></ProtectedRoute>} />
+        <Route path="/usuarios" element={<ProtectedRoute user={userSession}><Usuarios /></ProtectedRoute>} />
+        <Route path="/reportes" element={<ProtectedRoute user={userSession}><Reportes /></ProtectedRoute>} />
+        <Route path="/configuracion" element={<ProtectedRoute user={userSession}><Configuracion /></ProtectedRoute>} />
 
         {/* Captura de rutas no existentes */}
         <Route path="*" element={<Navigate to="/" replace />} />
