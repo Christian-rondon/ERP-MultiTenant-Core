@@ -52,20 +52,20 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   ];
 
   return (
-    <div className="h-screen w-full bg-[#050810] flex overflow-hidden">
+    <div className="h-screen w-full bg-deep-layers flex overflow-hidden">
       
       <aside 
         className={`${
           isSidebarOpen ? 'w-72' : 'w-20'
-        } bg-[#0a0f1a] border-r border-white/5 transition-all duration-300 flex flex-col h-full z-50 flex-shrink-0 shadow-2xl`}
+        } glass-panel transition-all duration-300 flex flex-col h-full z-50 flex-shrink-0 shadow-2xl`}
       >
         {/* LOGO AREA */}
         <div className="p-6 flex items-center justify-between flex-shrink-0">
           {isSidebarOpen && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-red-600 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.5)]"></div>
+              <div className="w-8 h-8 bg-amber-glow rounded-lg shadow-[0_0_15px_rgba(255,107,53,0.5)]"></div>
               <span className="text-xl font-black italic tracking-tighter text-white uppercase">
-                NEXO<span className="text-red-600">CORE</span>
+                NEXO<span className="text-amber-glow">CORE</span>
               </span>
             </div>
           )}
@@ -86,13 +86,13 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 key={item.to}
                 to={item.to}
                 className={`
-                  flex items-center gap-4 px-4 py-4 rounded-2xl transition-all group relative
+                  flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group relative
                   ${isActive 
-                    ? 'bg-red-600 text-white shadow-[0_10px_20px_rgba(220,38,38,0.2)]' 
-                    : 'text-gray-500 hover:bg-white/5 hover:text-white'}
+                    ? 'bg-electric-cyan text-deep-layers shadow-[0_10px_20px_rgba(0,242,255,0.2)]' 
+                    : 'text-silver-gray hover:bg-electric-cyan/10 hover:text-white'}
                 `}
               >
-                <div className={`${isActive ? 'text-white' : 'group-hover:text-red-500'} transition-colors flex-shrink-0`}>
+                <div className={`${isActive ? 'text-deep-layers' : 'group-hover:text-electric-cyan'} transition-colors duration-300 flex-shrink-0`}>
                   {item.icon}
                 </div>
                 {isSidebarOpen && (
@@ -101,7 +101,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                   </span>
                 )}
                 {!isSidebarOpen && isActive && (
-                   <div className="absolute left-0 w-1.5 h-6 bg-red-600 rounded-r-full shadow-[0_0_10px_rgb(220,38,38)]"></div>
+                   <div className="absolute left-0 w-1.5 h-6 bg-electric-cyan rounded-r-full shadow-[0_0_10px_rgba(0,242,255,0.8)]"></div>
                 )}
               </Link>
             );
@@ -113,7 +113,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-gray-500 hover:bg-red-600/10 hover:text-red-500 transition-all italic font-bold text-xs uppercase tracking-widest group cursor-pointer"
+            className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-silver-gray hover:bg-electric-cyan/10 hover:text-electric-cyan transition-all duration-300 italic font-bold text-xs uppercase tracking-widest group cursor-pointer"
           >
             <div className="group-hover:rotate-12 transition-transform">
               <LogOut size={22} />
@@ -124,13 +124,13 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto relative bg-[#050810]">
+      <main className="flex-1 overflow-y-auto relative bg-deep-layers">
         <div className="relative z-10 p-6 md:p-8 pt-10"> 
           {children}
         </div>
         
         {/* Decoración de fondo */}
-        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-red-600/5 blur-[150px] -z-10 rounded-full pointer-events-none"></div>
+        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-electric-cyan/5 blur-[150px] -z-10 rounded-full pointer-events-none"></div>
       </main>
     </div>
   );

@@ -79,15 +79,15 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
   };
 
   return (
-    <div className="min-h-screen bg-[#050a15] flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-[#10172a]/60 backdrop-blur-2xl border border-white/10 p-10 rounded-[40px] shadow-[0_0_100px_rgba(0,209,255,0.1)]">
+    <div className="min-h-screen bg-deep-layers flex items-center justify-center p-6">
+      <div className="w-full max-w-md glass-panel p-10 rounded-[40px] shadow-[0_0_100px_rgba(0,242,255,0.1)]">
         
         <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#00d1ff] to-[#0057ff] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(0,209,255,0.4)]">
-            <ShieldCheck size={40} className="text-[#050a15]" />
+          <div className="w-20 h-20 bg-electric-cyan rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(0,242,255,0.4)]">
+            <ShieldCheck size={40} className="text-deep-layers" />
           </div>
           <h1 className="text-3xl font-black text-white italic tracking-widest uppercase">
-            Nexo Core <span className="text-[#00d1ff]">V3</span>
+            Nexo Core <span className="text-electric-cyan">V3</span>
           </h1>
           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[4px] mt-2">
             Sistemas de Gestión Inteligente
@@ -96,14 +96,14 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
 
         <form onSubmit={iniciarSesion} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest ml-4">
+            <label className="text-[9px] font-black text-silver-gray uppercase tracking-widest ml-4">
               Nombre de Usuario / Username
             </label>
             <div className="relative">
-              <User className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00d1ff]" size={18} />
+              <User className="absolute left-5 top-1/2 -translate-y-1/2 text-electric-cyan" size={18} />
               <input 
                 type="text" 
-                className="w-full bg-[#050a15] border border-white/5 p-5 pl-14 rounded-2xl text-white font-bold outline-none focus:border-[#00d1ff]/50 transition-all"
+                className="cyber-input w-full p-5 pl-14 rounded-2xl text-white font-bold text-xl"
                 placeholder="USUARIO"
                 value={identificador}
                 onChange={(e) => setIdentificador(e.target.value)}
@@ -113,14 +113,14 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest ml-4">
+            <label className="text-[9px] font-black text-silver-gray uppercase tracking-widest ml-4">
               Clave de Acceso
             </label>
             <div className="relative">
-              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-silver-gray" size={18} />
               <input 
                 type="password" 
-                className="w-full bg-[#050a15] border border-white/5 p-5 pl-14 rounded-2xl text-white font-bold outline-none focus:border-[#00d1ff]/50 transition-all text-xl"
+                className="cyber-input w-full p-5 pl-14 rounded-2xl text-white font-bold text-xl"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -138,13 +138,13 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: (user: any) 
           <button 
             type="submit"
             disabled={loading}
-            className={`w-full py-5 bg-gradient-to-r from-[#0057ff] to-[#00d1ff] text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-[4px] text-xs mt-4 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`cyber-button w-full py-5 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-[4px] text-xs mt-4 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {loading ? 'AUTENTICANDO...' : 'Ingresar al Sistema'}
           </button>
         </form>
 
-        <p className="text-center text-[8px] text-gray-600 uppercase font-bold mt-10 tracking-widest">
+        <p className="text-center text-[8px] text-silver-gray uppercase font-bold mt-10 tracking-widest">
           Desarrollador Nexo Core &copy; 2026
         </p>
       </div>

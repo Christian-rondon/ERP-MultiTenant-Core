@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply bg-deep-layers text-white min-h-screen;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-[10px] border border-white/10 rounded-lg;
+  }
+
+  .cyber-button {
+    @apply bg-electric-cyan text-deep-layers font-bold py-2 px-4 rounded hover:shadow-lg hover:shadow-electric-cyan/50 transition-all duration-300;
+  }
+
+  .cyber-input {
+    @apply bg-deep-layers border border-silver-gray rounded px-3 py-2 text-white focus:border-electric-cyan focus:outline-none focus:ring-1 focus:ring-electric-cyan/50 transition-all duration-300;
+  }
+
+  .cyber-text-primary {
+    @apply text-white;
+  }
+
+  .cyber-text-secondary {
+    @apply text-silver-gray;
+  }
+
+  .neon-border {
+    @apply border border-electric-cyan shadow-lg shadow-electric-cyan/50;
+  }
+
+  .neon-glow {
+    @apply shadow-lg shadow-electric-cyan/50;
+  }
+}
